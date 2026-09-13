@@ -1,0 +1,28 @@
+# Blueprint de Render para la encuesta de nombres.
+#
+# Servicio y base APARTE de Negocio360. Nada aquí toca producción.
+# En Render: New → Blueprint → apunta al repo → Apply.
+
+databases:
+  - name: encuesta-nombres-db
+    databaseName: encuesta
+    user: encuesta
+    plan: free
+
+services:
+  - type: web
+    name: encuesta-nombres
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /salud
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: encuesta-nombres-db
+          property: connectionString
+      # Protege la vista de resultados. Render la genera sola;
+      # cópiala del panel (Environment) para armar tu link.
+      - key: CLAVE_RESULTADOS
+        generateValue: true

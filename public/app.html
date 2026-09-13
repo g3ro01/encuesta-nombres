@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ayúdame a elegir el nombre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Dos tonos con trabajo distinto sobre neutros fríos.
+   --accent es el verde de RELLENO: brillante, siempre con --accent-ink encima.
+   --accent-texto es el mismo verde pero legible sobre el fondo: texto, íconos,
+   bordes y foco. Un verde tan vivo como para llamar la atención no puede
+   sostener texto blanco, así que son dos valores, no uno.
+   --calido (ámbar) es la energía del avance: barra de pasos, puntos hechos.
+   --alerta es rojo, no ámbar: una advertencia no debe parecer decoración. */
+:root{
+  /* Neutros fríos, sin punta de amarillo, para que el mint se lea limpio. */
+  --ground:#E9EEED; --surface:#FBFDFD; --surface-2:#DBE3E2;
+  --line:#BAC6C4; --line-soft:#D2DBDA;
+  --ink:#121817; --ink-2:#36403E; --muted:#556160;
+  --accent:#3EE3C0; --accent-ink:#04231C;
+  --accent-texto:#00705F;
+  --calido:#B96F04;
+  --ok:#00705F; --ok-bg:#C6EFE4;
+  --alerta:#BE3C22;
+  --shadow:0 1px 0 rgba(18,24,23,.04), 0 10px 26px -20px rgba(18,24,23,.55);
+  --lift:0 2px 0 rgba(18,24,23,.06), 0 14px 32px -22px rgba(18,24,23,.65);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#131810; --surface:#1C2218; --surface-2:#262E20;
+    --line:#38412E; --line-soft:#2C3425;
+    --ink:#EBF0E1; --ink-2:#C2CAB3; --muted:#8C9680;
+    --accent:#3EE3C0; --accent-ink:#06130F;
+    --accent-texto:#3EE3C0;
+    --calido:#F2B23C;
+    --ok:#3EE3C0; --ok-bg:#0E332B;
+    --alerta:#FF8367;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 30px -22px #000;
+    --lift:0 2px 0 rgba(0,0,0,.35), 0 16px 36px -24px #000;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131810; --surface:#1C2218; --surface-2:#262E20;
+  --line:#38412E; --line-soft:#2C3425;
+  --ink:#EBF0E1; --ink-2:#C2CAB3; --muted:#8C9680;
+  --accent:#3EE3C0; --accent-ink:#06130F;
+  --accent-texto:#3EE3C0;
+  --calido:#F2B23C;
+  --ok:#3EE3C0; --ok-bg:#0E332B;
+  --alerta:#FF8367;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 30px -22px #000;
+  --lift:0 2px 0 rgba(0,0,0,.35), 0 16px 36px -24px #000;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);color:var(--ink);
+  font-family:"Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+:focus-visible{outline:2px solid var(--accent-texto);outline-offset:2px;border-radius:3px}
+
+/* ---------- armazón: cabecera fija, contenido, pie fijo ---------- */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.cabeza{
+  position:sticky;top:0;z-index:20;background:var(--ground);
+  border-bottom:1px solid var(--line-soft);
+}
+.cabeza-in{max-width:660px;margin:0 auto;padding:12px 18px 10px}
+.pasos{display:flex;gap:5px;margin-bottom:9px}
+.pasos i{
+  flex:1;height:3px;border-radius:2px;background:var(--line);
+  transition:background .25s ease;
+}
+.pasos i.on{background:var(--calido)}
+.rotulo{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rotulo h1{
+  font-family:"Newsreader",Georgia,serif;font-weight:600;
+  font-size:20px;line-height:1.2;margin:0;letter-spacing:-.01em;
+}
+.der{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.rotulo .cuenta{
+  font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.tema{
+  width:36px;height:36px;flex:0 0 36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  cursor:pointer;transition:color .15s ease, border-color .15s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.tema:hover{color:var(--accent-texto);border-color:var(--accent-texto)}
+.tema svg{pointer-events:none;display:block}
+
+main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
+.ayuda{color:var(--muted);font-size:14.5px;margin:0 0 18px;max-width:52ch}
+.pantalla[hidden]{display:none!important}
+
+/* ---------- 1 · elegir ---------- */
+.rejilla{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+@media (min-width:560px){.rejilla{grid-template-columns:repeat(3,1fr)}}
+.opcion{
+  font-family:"Newsreader",Georgia,serif;font-size:20px;font-weight:600;
+  letter-spacing:-.01em;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  min-height:56px;padding:10px 14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .12s ease, background .16s ease, border-color .16s ease, color .16s ease;
+}
+.opcion:hover{border-color:var(--ink-2)}
+.opcion:active{transform:scale(.97)}
+.opcion.sel{
+  background:var(--accent);border-color:var(--accent);color:var(--accent-ink);
+  box-shadow:var(--lift);
+}
+.opcion .n{
+  font-family:"Atkinson Hyperlegible",sans-serif;font-size:11px;font-weight:700;
+  width:20px;height:20px;flex:0 0 20px;border-radius:50%;
+  background:var(--accent-ink);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+}
+.opcion.lleno{opacity:.38}
+
+/* ---------- 2 · ordenar (arrastrable) ---------- */
+.orden{display:flex;flex-direction:column;gap:8px;position:relative}
+.rank{
+  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;
+  padding:12px 14px;box-shadow:var(--shadow);
+  position:relative;will-change:transform;
+  transition:transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s ease;
+}
+/* El que va en la mano no se anima: debe pegarse al dedo. */
+.rank.arrastrando{
+  transition:box-shadow .18s ease;
+  z-index:5;box-shadow:var(--lift);border-color:var(--accent-texto);
+}
+.rank.movido{transform:scale(1.02)}
+.puesto{
+  font-family:"Newsreader",Georgia,serif;font-size:15px;font-weight:600;
+  width:30px;height:30px;border-radius:50%;
+  background:var(--accent);color:var(--accent-ink);
+  display:flex;align-items:center;justify-content:center;
+}
+.rank .quien{
+  font-family:"Newsreader",Georgia,serif;font-size:22px;font-weight:600;letter-spacing:-.01em;
+}
+.asa{
+  width:44px;height:44px;flex:0 0 44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);background:transparent;border:1px solid transparent;
+  cursor:grab;transition:color .14s ease, background .14s ease;
+  touch-action:none;               /* sin esto el dedo hace scroll en vez de arrastrar */
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.asa:hover{color:var(--ink);background:var(--surface-2)}
+.asa:active,.rank.arrastrando .asa{cursor:grabbing;color:var(--accent-texto)}
+.asa svg{pointer-events:none;display:block}
+.pista{
+  font-size:12.5px;color:var(--muted);text-align:center;margin:14px 0 0;
+}
+
+/* ---------- 3 · describir ---------- */
+.puntos{display:flex;gap:6px;justify-content:center;margin-bottom:18px}
+.puntos b{
+  width:7px;height:7px;border-radius:50%;background:var(--line);
+  transition:background .2s ease, transform .2s ease;
+}
+.puntos b.hecho{background:var(--calido)}
+.puntos b.actual{background:var(--accent-texto);transform:scale(1.5)}
+.ficha{
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;
+  padding:24px 20px;box-shadow:var(--lift);text-align:center;
+}
+.ficha .lugar{
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin:0 0 6px;
+}
+.ficha h2{
+  font-family:"Newsreader",Georgia,serif;font-weight:600;
+  font-size:clamp(32px,9vw,44px);line-height:1;margin:0 0 4px;letter-spacing:-.02em;
+}
+.ficha .pregunta{color:var(--ink-2);font-size:15.5px;margin:0 0 18px}
+.ficha textarea{
+  width:100%;min-height:110px;resize:vertical;text-align:left;
+  font-family:inherit;font-size:16px;line-height:1.5;color:var(--ink);
+  background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:13px 14px;
+}
+.ficha textarea:focus{outline:2px solid var(--accent-texto);outline-offset:1px;border-color:var(--accent-texto)}
+.opcional{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.saltar{
+  background:none;border:0;color:var(--muted);font-family:inherit;font-size:14px;
+  text-decoration:underline;cursor:pointer;padding:8px;margin-top:6px;
+}
+.saltar:hover{color:var(--ink)}
+
+/* ---------- descartar ---------- */
+.descartar{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:20px}
+@media (min-width:560px){.descartar{grid-template-columns:repeat(3,1fr)}}
+.fuera{
+  font-family:"Newsreader",Georgia,serif;font-size:19px;font-weight:600;
+  letter-spacing:-.01em;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  min-height:52px;padding:10px 12px;cursor:pointer;
+  transition:transform .12s ease, background .16s ease, border-color .16s ease, color .16s ease;
+}
+.fuera:hover{border-color:var(--ink-2)}
+.fuera:active{transform:scale(.97)}
+.fuera.sel{
+  background:var(--alerta);border-color:var(--alerta);color:var(--surface);
+  box-shadow:var(--lift);
+}
+
+/* ---------- prueba de memoria ---------- */
+.memoria{
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;
+  padding:26px 20px;box-shadow:var(--lift);text-align:center;
+}
+.memoria .icono-mem{color:var(--muted);margin-bottom:10px}
+.memoria h2{
+  font-family:"Newsreader",Georgia,serif;font-weight:600;
+  font-size:clamp(22px,6vw,28px);line-height:1.15;margin:0 0 8px;letter-spacing:-.01em;
+}
+.memoria p{color:var(--ink-2);font-size:15px;margin:0 0 20px}
+.memoria input{
+  text-align:center;font-family:"Newsreader",Georgia,serif;
+  font-size:26px;font-weight:600;letter-spacing:-.01em;padding:14px;
+  background:var(--ground);
+}
+
+/* ---------- 4 · firmar ---------- */
+label.campo{display:block;margin-bottom:14px}
+label.campo span{display:block;font-size:13.5px;color:var(--ink-2);margin-bottom:6px}
+input[type=text], input[type=email], .libre{
+  width:100%;font-family:inherit;font-size:16px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+}
+.libre{min-height:76px;resize:vertical;line-height:1.5}
+input[type=text]:focus, input[type=email]:focus, .libre:focus{outline:2px solid var(--accent-texto);outline-offset:1px;border-color:var(--accent-texto)}
+
+.resumen{
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;
+  overflow:hidden;box-shadow:var(--shadow);margin:6px 0 22px;
+}
+.resumen .fila{
+  display:grid;grid-template-columns:26px 1fr auto;gap:11px;align-items:baseline;
+  padding:11px 14px;border-bottom:1px solid var(--line-soft);
+}
+.resumen .fila:last-child{border-bottom:0}
+.resumen .p{
+  font-family:"Newsreader",Georgia,serif;font-size:13px;font-weight:600;color:var(--muted);
+}
+.resumen .nm{font-family:"Newsreader",Georgia,serif;font-size:19px;font-weight:600;line-height:1.25}
+.resumen .dc{display:block;font-family:inherit;font-size:13.5px;color:var(--muted);margin-top:2px}
+.editar{
+  background:none;border:0;color:var(--accent-texto);font-family:inherit;font-size:13px;
+  cursor:pointer;padding:4px 2px;text-decoration:underline;
+}
+
+/* ---------- pie fijo ---------- */
+/* Barra sólida, no degradado: si es translúcida, el último campo se lee
+   a través de ella y parece un error de dibujo. */
+.pie{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  background:var(--ground);border-top:1px solid var(--line-soft);
+  padding:14px 18px calc(16px + env(safe-area-inset-bottom));
+}
+.pie-in{max-width:660px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.btn{
+  flex:1;padding:15px 18px;border:0;border-radius:12px;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:700;letter-spacing:.01em;
+  background:var(--accent);color:var(--accent-ink);
+  transition:opacity .16s ease, transform .12s ease;
+}
+.btn:active:not([disabled]){transform:scale(.985)}
+.btn[disabled]{opacity:.32;cursor:default}
+.btn.atras{
+  flex:0 0 auto;background:transparent;color:var(--muted);
+  border:1px solid var(--line);font-weight:400;padding:15px 18px;
+}
+.btn.atras:hover{color:var(--ink);border-color:var(--ink-2)}
+.nota{
+  text-align:center;font-size:12.5px;color:var(--alerta);
+  margin:9px 0 0;min-height:18px;
+}
+
+/* ---------- final ---------- */
+.gracias{
+  background:var(--ok-bg);border:1px solid var(--ok);border-radius:14px;
+  padding:30px 22px;text-align:center;margin-bottom:20px;
+}
+.gracias h2{
+  font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:34px;
+  margin:0 0 8px;color:var(--ok);
+}
+.gracias p{margin:0;color:var(--ink-2)}
+.aviso-demo{
+  border:1px dashed var(--line);border-radius:10px;padding:13px 15px;
+  font-size:13.5px;color:var(--muted);
+}
+</style>
+<style>
+/* ---------- vista de resultados ---------- */
+.res{max-width:920px;margin:0 auto;padding:30px 18px 70px}
+.res h1{font-family:"Newsreader",Georgia,serif;font-weight:500;font-size:clamp(30px,6vw,44px);
+  line-height:1.05;letter-spacing:-.02em;margin:0 0 10px}
+.res h2{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:23px;margin:34px 0 6px}
+.res .intro{color:var(--ink-2);margin:0 0 4px}
+.res .mini{color:var(--muted);font-size:13.5px;margin:8px 0 0;max-width:70ch}
+.caja{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;
+  box-shadow:var(--shadow);overflow-x:auto;margin-top:14px}
+.res table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px}
+.res th{text-align:left;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);padding:11px 13px;background:var(--surface-2);
+  border-bottom:1px solid var(--line);white-space:nowrap;font-weight:700}
+.res td{padding:11px 13px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+.res tr:last-child td{border-bottom:0}
+td.nm{font-family:"Newsreader",Georgia,serif;font-size:20px;font-weight:600;white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+td.prom{font-weight:700;color:var(--accent-texto);font-variant-numeric:tabular-nums}
+.barra{height:6px;border-radius:3px;background:var(--accent-texto);min-width:2px}
+.frase{background:var(--surface);border:1px solid var(--line-soft);border-left:3px solid var(--accent-texto);
+  border-radius:10px;padding:12px 15px;margin-bottom:8px;font-size:14.5px;color:var(--ink-2)}
+.frase b{color:var(--ink);font-family:"Newsreader",Georgia,serif;font-size:18px}
+.frase .de{color:var(--muted);font-size:12px;display:block;margin-top:4px}
+.frase.mala{border-left-color:var(--alerta)}
+td.num.malo{color:var(--alerta);font-weight:700}
+.vacio-msg{color:var(--muted);font-size:15px;margin-top:20px}
+</style>
+</head>
+<body>
+
+<div id="vista-encuesta" hidden>
+<div class="app">
+
+  <header class="cabeza">
+    <div class="cabeza-in">
+      <div class="pasos" id="pasos" aria-hidden="true"></div>
+      <div class="rotulo">
+        <h1 id="titulo">Escoge tus favoritos</h1>
+        <div class="der">
+          <span class="cuenta" id="cuenta"></span>
+          <button class="tema" id="tema" type="button"></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- 1 · elegir -->
+    <section class="pantalla" id="p1">
+      <p class="ayuda">Escoge los que te laten, en el orden que te gusten.
+        Tócalos otra vez para quitarlos.</p>
+      <div class="rejilla" id="rejilla"></div>
+    </section>
+
+    <!-- 2 · ordenar -->
+    <section class="pantalla" id="p2" hidden>
+      <p class="ayuda">Este es tu podio. Arrastra desde las rayitas para reacomodarlos.</p>
+      <div class="orden" id="orden"></div>
+      <p class="pista">También puedes moverlos con las flechas del teclado.</p>
+    </section>
+
+    <!-- 3 · descartar -->
+    <section class="pantalla" id="p3" hidden>
+      <p class="ayuda">De los que no escogiste, ¿cuál te gusta menos? Esto me sirve
+        tanto como los que te gustaron.</p>
+      <div class="descartar" id="descartar"></div>
+      <label class="campo">
+        <span>¿Por qué ese?</span>
+        <textarea class="libre" id="peor-porque"
+                  placeholder="Suena feo, no se entiende, me recuerda a otra cosa…"></textarea>
+      </label>
+    </section>
+
+    <!-- 4 · describir -->
+    <section class="pantalla" id="p4" hidden>
+      <div class="puntos" id="puntos"></div>
+      <div class="ficha">
+        <p class="lugar" id="ficha-lugar"></p>
+        <h2 id="ficha-nombre"></h2>
+        <p class="pregunta">Sin pensarlo mucho: ¿qué crees que vende?</p>
+        <textarea id="ficha-texto" placeholder="Una tiendita, una app de citas, un banco…"></textarea>
+        <p class="opcional" id="ficha-opcional" hidden>Este puedes saltarlo si no se te ocurre nada.</p>
+        <button class="saltar" id="saltar" hidden type="button">Saltar este</button>
+      </div>
+    </section>
+
+    <!-- 5 · prueba de memoria -->
+    <section class="pantalla" id="p5" hidden>
+      <div class="memoria">
+        <div class="icono-mem">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3z"/><path d="M9.5 20h5"/>
+          </svg>
+        </div>
+        <h2>Sin regresar a verlo: ¿cómo se escribe tu favorito?</h2>
+        <p>No vale asomarse. Si no te acuerdas exacto, escribe como creas que va.</p>
+        <input type="text" id="memoria" autocomplete="off" autocapitalize="words"
+               spellcheck="false" placeholder="Escríbelo aquí">
+      </div>
+    </section>
+
+    <!-- 6 · firmar -->
+    <section class="pantalla" id="p6" hidden>
+      <p class="ayuda">Esto es lo que vas a mandar. Toca cualquiera para corregirlo.</p>
+      <div class="resumen" id="resumen"></div>
+
+      <label class="campo">
+        <span>Tu nombre</span>
+        <input type="text" id="quien" placeholder="Para saber de quién es cada opinión" autocomplete="name">
+      </label>
+      <label class="campo">
+        <span>Tu correo <em style="color:var(--muted)">(opcional)</em></span>
+        <input type="email" id="correo" inputmode="email" autocomplete="email"
+               placeholder="tunombre@correo.com">
+      </label>
+      <label class="campo">
+        <span>¿Algo más? <em style="color:var(--muted)">(opcional)</em></span>
+        <textarea class="libre" id="libre" placeholder="Un nombre que te chocó, una idea mejor, lo que sea"></textarea>
+      </label>
+    </section>
+
+    <!-- final -->
+    <section class="pantalla" id="pf" hidden>
+      <div class="gracias">
+        <h2>¡Gracias!</h2>
+        <p>De verdad me sirve.</p>
+      </div>
+      <div class="resumen" id="resumen-final"></div>
+    </section>
+
+  </main>
+
+  <div class="pie" id="pie">
+    <div class="pie-in">
+      <button class="btn atras" id="atras" type="button" hidden>Atrás</button>
+      <button class="btn" id="seguir" type="button" disabled>Continuar</button>
+    </div>
+    <p class="nota" id="nota"></p>
+  </div>
+
+</div>
+</div>
+
+<div id="vista-resultados" hidden>
+  <div class="res">
+    <h1>Resultados</h1>
+    <p class="intro" id="cuantas"></p>
+
+    <div id="sinDatos" class="vacio-msg" hidden>
+      Todavía no llega ninguna respuesta. Comparte el link y vuelve aquí.
+    </div>
+
+    <div id="conDatos" hidden>
+      <div class="caja">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Nombre</th><th>Promedio</th><th></th>
+            <th>Lo eligió</th><th>1er lugar</th><th>Pos. media</th><th>Lo descartó</th>
+          </tr></thead>
+          <tbody id="filas"></tbody>
+        </table>
+      </div>
+      <p class="mini">Promedio = puntos entre todas las respuestas. Cada 1er lugar vale
+        <span id="topPts"></span> puntos y el último vale 1. «Lo eligió» es el porcentaje
+        de gente que lo metió a su top.</p>
+
+      <h2>A qué les suena que vende</h2>
+      <div id="frases"></div>
+
+      <div id="bloqueDescartes" hidden>
+        <h2>Los que descartarían</h2>
+        <div id="descartes"></div>
+      </div>
+
+      <div id="bloqueMemoria" hidden>
+        <h2>Prueba de memoria</h2>
+        <p class="mini" id="memoriaResumen"></p>
+        <div id="memoria"></div>
+      </div>
+
+      <div id="bloqueLibres" hidden>
+        <h2>Comentarios libres</h2>
+        <div id="libres"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // La lista vive en el servidor (server.js). Aquí solo se recibe.
+  var NOMBRES = [], TOP = 5, OBLIG = 3;
+  var LLAVE = 'encuesta-nombres-v1';
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var st = { elegidos: [], textos: {}, peor: '', peorPorque: '', memoria: '',
+           quien: '', correo: '', libre: '', paso: 1, idx: 0 };
+
+  /* --- guardar el avance para que nadie pierda lo escrito --- */
+  function guardar() {
+    try {
+      localStorage.setItem(LLAVE, JSON.stringify({
+        elegidos: st.elegidos, textos: st.textos,
+        peor: st.peor, peorPorque: st.peorPorque, memoria: st.memoria,
+        quien: st.quien, correo: st.correo, libre: st.libre
+      }));
+    } catch (e) { /* modo privado o almacenamiento bloqueado: seguimos igual */ }
+  }
+  function recuperar() {
+    try {
+      var g = JSON.parse(localStorage.getItem(LLAVE) || 'null');
+      if (!g) return;
+      st.elegidos = (g.elegidos || []).filter(function (n) { return NOMBRES.indexOf(n) !== -1; })
+                                      .slice(0, TOP);
+      st.textos = g.textos || {};
+      st.peor = g.peor || ''; st.peorPorque = g.peorPorque || '';
+      st.memoria = g.memoria || '';
+      st.quien = g.quien || ''; st.correo = g.correo || ''; st.libre = g.libre || '';
+    } catch (e) { /* nada que recuperar */ }
+  }
+
+  /* --- orden aleatorio por visita: nadie gana por salir primero --- */
+  var vitrina = [];
+  function barajar() {
+    vitrina = NOMBRES.slice();
+    for (var i = vitrina.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = vitrina[i]; vitrina[i] = vitrina[j]; vitrina[j] = t;
+    }
+  }
+
+  /* ---------- 1 · elegir ---------- */
+  function pintarRejilla() {
+    var c = $('rejilla');
+    c.innerHTML = '';
+    vitrina.forEach(function (n) {
+      var pos = st.elegidos.indexOf(n);
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'opcion' + (pos !== -1 ? ' sel' : '') +
+                    (pos === -1 && st.elegidos.length >= TOP ? ' lleno' : '');
+      b.setAttribute('aria-pressed', pos !== -1 ? 'true' : 'false');
+
+      if (pos !== -1) {
+        var badge = document.createElement('span');
+        badge.className = 'n';
+        badge.textContent = pos + 1;
+        b.appendChild(badge);
+      }
+      b.appendChild(document.createTextNode(n));
+
+      // Elegido: siempre se puede quitar. No elegido y sin cupo: apagado.
+      b.disabled = (pos === -1 && st.elegidos.length >= TOP);
+      if (!b.disabled) {
+        b.addEventListener('click', function () {
+          if (pos !== -1) st.elegidos.splice(pos, 1);
+          else st.elegidos.push(n);
+          guardar();
+          pintarRejilla();
+          refrescar();
+        });
+      }
+      c.appendChild(b);
+    });
+  }
+
+  /* ---------- 2 · ordenar, arrastrando ---------- */
+  var ASA_SVG = '<svg width="20" height="14" viewBox="0 0 20 14" fill="none" ' +
+    'stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+    '<path d="M3 2h14M3 7h14M3 12h14"/></svg>';
+
+  function pintarOrden() {
+    var c = $('orden');
+    c.innerHTML = '';
+    st.elegidos.forEach(function (n, p) {
+      var f = document.createElement('div');
+      f.className = 'rank';
+      f.dataset.pos = p;
+
+      var puesto = document.createElement('div');
+      puesto.className = 'puesto';
+      puesto.textContent = p + 1;
+
+      var nom = document.createElement('div');
+      nom.className = 'quien';
+      nom.textContent = n;
+
+      var asa = document.createElement('div');
+      asa.className = 'asa';
+      asa.innerHTML = ASA_SVG;
+      asa.setAttribute('role', 'button');
+      asa.setAttribute('tabindex', '0');
+      asa.setAttribute('aria-label', 'Mover ' + n + ', lugar ' + (p + 1) +
+                       ' de ' + st.elegidos.length);
+      asa.addEventListener('pointerdown', function (e) { tomar(e, p, asa); });
+      asa.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowUp')   { e.preventDefault(); moverYEnfocar(p, -1); }
+        if (e.key === 'ArrowDown') { e.preventDefault(); moverYEnfocar(p, 1); }
+      });
+
+      f.appendChild(puesto); f.appendChild(nom); f.appendChild(asa);
+      c.appendChild(f);
+    });
+  }
+
+  /* --- arrastre con eventos de puntero: mismo código para dedo y mouse --- */
+  var arr = null;
+
+  function tomar(e, p, asa) {
+    if (arr || st.elegidos.length < 2) return;
+    e.preventDefault();
+
+    var filas = Array.prototype.slice.call($('orden').children);
+    // El paso se mide del DOM, así incluye el gap sin tenerlo que adivinar.
+    var paso = filas[1].offsetTop - filas[0].offsetTop;
+
+    arr = { p: p, destino: p, y0: e.clientY, paso: paso, filas: filas, id: e.pointerId };
+    filas[p].classList.add('arrastrando');
+    try { asa.setPointerCapture(e.pointerId); } catch (err) { /* da igual */ }
+
+    asa.addEventListener('pointermove', mueve);
+    asa.addEventListener('pointerup', suelta);
+    asa.addEventListener('pointercancel', suelta);
+  }
+
+  function mueve(e) {
+    if (!arr) return;
+    var n = arr.filas.length;
+    var dy = e.clientY - arr.y0;
+    // No dejamos que se salga del podio.
+    dy = Math.max(-arr.p * arr.paso, Math.min((n - 1 - arr.p) * arr.paso, dy));
+    arr.filas[arr.p].style.transform = 'translateY(' + dy + 'px)';
+
+    var destino = arr.p + Math.round(dy / arr.paso);
+    destino = Math.max(0, Math.min(n - 1, destino));
+    if (destino !== arr.destino) {
+      arr.destino = destino;
+      acomodarHuecos();
+    }
+  }
+
+  // Los demás se hacen a un lado para enseñar dónde va a caer.
+  function acomodarHuecos() {
+    arr.filas.forEach(function (f, j) {
+      if (j === arr.p) return;
+      var d = 0;
+      if (arr.p < arr.destino && j > arr.p && j <= arr.destino) d = -arr.paso;
+      else if (arr.p > arr.destino && j < arr.p && j >= arr.destino) d = arr.paso;
+      f.style.transform = d ? 'translateY(' + d + 'px)' : '';
+    });
+  }
+
+  function suelta(e) {
+    if (!arr) return;
+    var a = arr; arr = null;
+
+    if (e && e.target) {
+      e.target.removeEventListener('pointermove', mueve);
+      e.target.removeEventListener('pointerup', suelta);
+      e.target.removeEventListener('pointercancel', suelta);
+    }
+    a.filas.forEach(function (f) { f.style.transform = ''; f.classList.remove('arrastrando'); });
+
+    if (a.destino !== a.p) {
+      var mov = st.elegidos.splice(a.p, 1)[0];
+      st.elegidos.splice(a.destino, 0, mov);
+      guardar();
+    }
+    pintarOrden();
+    resaltar(a.destino);
+  }
+
+  function moverYEnfocar(p, d) {
+    var q = p + d;
+    if (q < 0 || q >= st.elegidos.length) return;
+    var t = st.elegidos[p]; st.elegidos[p] = st.elegidos[q]; st.elegidos[q] = t;
+    guardar();
+    pintarOrden();
+    resaltar(q);
+    var asas = $('orden').querySelectorAll('.asa');
+    if (asas[q]) asas[q].focus();
+  }
+
+  function resaltar(i) {
+    var filas = $('orden').children;
+    if (!filas[i]) return;
+    filas[i].classList.add('movido');
+    setTimeout(function () { if (filas[i]) filas[i].classList.remove('movido'); }, 200);
+  }
+
+  /* ---------- 3 · describir, uno a la vez ---------- */
+  function pintarFicha() {
+    var n = st.elegidos[st.idx];
+    var obligatorio = st.idx < OBLIG;
+
+    var pts = $('puntos');
+    pts.innerHTML = '';
+    for (var k = 0; k < TOP; k++) {
+      var b = document.createElement('b');
+      if (k === st.idx) b.className = 'actual';
+      else if ((st.textos[st.elegidos[k]] || '').trim()) b.className = 'hecho';
+      pts.appendChild(b);
+    }
+
+    $('ficha-lugar').textContent = 'Tu lugar ' + (st.idx + 1);
+    $('ficha-nombre').textContent = n;
+    var ta = $('ficha-texto');
+    ta.value = st.textos[n] || '';
+    $('ficha-opcional').hidden = obligatorio;
+    $('saltar').hidden = obligatorio;
+  }
+
+  /* ---------- 3 · descartar ---------- */
+  function pintarDescartar() {
+    var c = $('descartar');
+    c.innerHTML = '';
+    // Solo los que NO escogió: no tiene sentido amar y odiar el mismo nombre.
+    vitrina.filter(function (n) { return st.elegidos.indexOf(n) === -1; })
+      .forEach(function (n) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'fuera' + (st.peor === n ? ' sel' : '');
+        b.textContent = n;
+        b.setAttribute('aria-pressed', st.peor === n ? 'true' : 'false');
+        b.addEventListener('click', function () {
+          st.peor = (st.peor === n) ? '' : n;   // tocarlo otra vez lo quita
+          guardar();
+          pintarDescartar();
+          refrescar();
+        });
+        c.appendChild(b);
+      });
+    $('peor-porque').value = st.peorPorque;
+  }
+
+  /* ---------- 4 · resumen ---------- */
+  function pintarResumen(destino, conEditar) {
+    var c = $(destino);
+    c.innerHTML = '';
+    st.elegidos.forEach(function (n, p) {
+      var f = document.createElement('div');
+      f.className = 'fila';
+
+      var num = document.createElement('div');
+      num.className = 'p';
+      num.textContent = (p + 1) + '.';
+
+      var med = document.createElement('div');
+      var nm = document.createElement('span');
+      nm.className = 'nm'; nm.textContent = n;
+      med.appendChild(nm);
+      var d = document.createElement('span');
+      d.className = 'dc';
+      d.textContent = (st.textos[n] || '').trim() || '— sin describir —';
+      med.appendChild(d);
+
+      f.appendChild(num); f.appendChild(med);
+
+      if (conEditar) {
+        var e = document.createElement('button');
+        e.type = 'button'; e.className = 'editar'; e.textContent = 'Editar';
+        e.addEventListener('click', function () { st.idx = p; ir(4); });
+        f.appendChild(e);
+      }
+      c.appendChild(f);
+    });
+
+    // Lo demás que va en el envío, para que nada viaje a ciegas.
+    if (st.peor) c.appendChild(filaExtra('Descartas', st.peor, st.peorPorque, conEditar ? 3 : 0));
+    if (st.memoria) c.appendChild(filaExtra('De memoria', st.memoria,
+      st.memoria.toLowerCase() === (st.elegidos[0] || '').toLowerCase()
+        ? 'Coincide con tu #1' : 'Tu #1 es ' + st.elegidos[0],
+      conEditar ? 5 : 0));
+  }
+
+  function filaExtra(etiqueta, valor, nota, pasoEditar) {
+    var f = document.createElement('div');
+    f.className = 'fila';
+
+    var izq = document.createElement('div');
+    izq.className = 'p';
+    izq.textContent = '';
+
+    var med = document.createElement('div');
+    var tit = document.createElement('span');
+    tit.className = 'dc';
+    tit.style.marginTop = '0';
+    tit.textContent = etiqueta;
+    med.appendChild(tit);
+    var nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.style.display = 'block';
+    nm.textContent = valor;
+    med.appendChild(nm);
+    if (nota) {
+      var d = document.createElement('span');
+      d.className = 'dc';
+      d.textContent = nota;
+      med.appendChild(d);
+    }
+
+    f.appendChild(izq); f.appendChild(med);
+    if (pasoEditar) {
+      var e = document.createElement('button');
+      e.type = 'button'; e.className = 'editar'; e.textContent = 'Editar';
+      e.addEventListener('click', function () { ir(pasoEditar); });
+      f.appendChild(e);
+    }
+    return f;
+  }
+
+  /* ---------- navegación ---------- */
+  var PASOS = 6;                       // pantallas antes del "gracias"
+  var TITULOS = { 1: 'Escoge tus favoritos', 2: 'Arma tu podio',
+                  3: 'El que descartarías', 4: '¿Qué te suena que vende?',
+                  5: 'De memoria', 6: 'Revisa y manda', 7: 'Listo' };
+
+  function ir(p) {
+    st.paso = p;
+    for (var k = 1; k <= PASOS; k++) $('p' + k).hidden = (k !== p);
+    $('pf').hidden = (p !== PASOS + 1);
+
+    if (p === 1) pintarRejilla();
+    if (p === 2) pintarOrden();
+    if (p === 3) pintarDescartar();
+    if (p === 4) pintarFicha();
+    if (p === 5) $('memoria').value = st.memoria;
+    if (p === 6) {
+      pintarResumen('resumen', true);
+      $('quien').value = st.quien;
+      $('correo').value = st.correo;
+      $('libre').value = st.libre;
+    }
+    if (p === PASOS + 1) pintarResumen('resumen-final', false);
+
+    refrescar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function refrescar() {
+    var p = st.paso;
+    $('titulo').textContent = TITULOS[p];
+
+    var barras = $('pasos');
+    if (barras.children.length !== PASOS) {
+      barras.innerHTML = '';
+      for (var k = 0; k < PASOS; k++) barras.appendChild(document.createElement('i'));
+    }
+    for (var k = 0; k < PASOS; k++) {
+      barras.children[k].className = (k < Math.min(p, PASOS)) ? 'on' : '';
+    }
+
+    var cuenta = '';
+    if (p === 1) {
+      var faltan = TOP - st.elegidos.length;
+      cuenta = faltan > 0 ? 'Faltan ' + faltan : 'Ya están los ' + TOP;
+    } else if (p === 4) {
+      cuenta = (st.idx + 1) + ' de ' + TOP;
+    }
+    $('cuenta').textContent = cuenta;
+
+    $('atras').hidden = (p === 1 || p === PASOS + 1);
+    $('pie').hidden = (p === PASOS + 1);
+    $('nota').textContent = '';
+
+    var seguir = $('seguir');
+    if (p === 1) {
+      seguir.textContent = 'Continuar';
+      seguir.disabled = st.elegidos.length !== TOP;
+    } else if (p === 2) {
+      seguir.textContent = 'Así está bien';
+      seguir.disabled = false;
+    } else if (p === 3) {
+      seguir.textContent = 'Continuar';
+      seguir.disabled = !st.peor;
+    } else if (p === 4) {
+      seguir.textContent = (st.idx === TOP - 1) ? 'Ya casi' : 'Siguiente';
+      seguir.disabled = false;
+    } else if (p === 5) {
+      seguir.textContent = 'Continuar';
+      seguir.disabled = false;
+    } else if (p === 6) {
+      seguir.textContent = 'Enviar';
+      seguir.disabled = false;
+    }
+  }
+
+  /* ---------- eventos ---------- */
+  $('ficha-texto').addEventListener('input', function () {
+    st.textos[st.elegidos[st.idx]] = this.value;
+    $('nota').textContent = '';
+    guardar();
+  });
+
+  $('saltar').addEventListener('click', function () { avanzarFicha(); });
+
+  function avanzarFicha() {
+    if (st.idx < TOP - 1) { st.idx += 1; pintarFicha(); refrescar(); window.scrollTo({top:0,behavior:'smooth'}); }
+    else ir(5);
+  }
+
+  $('seguir').addEventListener('click', function () {
+    var p = st.paso;
+
+    if (p === 1) { st.idx = 0; ir(2); return; }
+    if (p === 2) { ir(3); return; }
+
+    if (p === 3) {
+      if (!st.peor) {
+        $('nota').textContent = 'Escoge uno. Alguno te tuvo que gustar menos.';
+        return;
+      }
+      st.peorPorque = $('peor-porque').value.trim();
+      if (!st.peorPorque) {
+        $('nota').textContent = 'Dime por qué, aunque sea en tres palabras.';
+        $('peor-porque').focus();
+        return;
+      }
+      guardar();
+      st.idx = 0;
+      ir(4);
+      return;
+    }
+
+    if (p === 4) {
+      var n = st.elegidos[st.idx];
+      if (st.idx < OBLIG && !(st.textos[n] || '').trim()) {
+        $('nota').textContent = 'De este sí necesito tu impresión, aunque sea una palabra.';
+        $('ficha-texto').focus();
+        return;
+      }
+      avanzarFicha();
+      return;
+    }
+
+    if (p === 5) {
+      st.memoria = $('memoria').value.trim();
+      if (!st.memoria) {
+        $('nota').textContent = 'Inténtalo aunque no estés seguro: eso es justo lo que mido.';
+        $('memoria').focus();
+        return;
+      }
+      guardar();
+      ir(6);
+      return;
+    }
+
+    if (p === 6) {
+      st.quien = $('quien').value.trim();
+      st.correo = $('correo').value.trim();
+      st.libre = $('libre').value.trim();
+      guardar();
+      if (!st.quien) {
+        $('nota').textContent = 'Ponme tu nombre para saber de quién es la opinión.';
+        $('quien').focus();
+        return;
+      }
+      // El correo es opcional; si lo escribieron, al menos que tenga forma de correo.
+      if (st.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(st.correo)) {
+        $('nota').textContent = 'Ese correo no se ve bien. Corrígelo o déjalo vacío.';
+        $('correo').focus();
+        return;
+      }
+      enviar();
+    }
+  });
+
+  $('atras').addEventListener('click', function () {
+    var p = st.paso;
+    if (p === 2) { ir(1); return; }
+    if (p === 3) { ir(2); return; }
+    if (p === 4) {
+      if (st.idx > 0) { st.idx -= 1; pintarFicha(); refrescar(); }
+      else ir(3);
+      return;
+    }
+    if (p === 5) { st.idx = TOP - 1; ir(4); return; }
+    if (p === 6) { ir(5); }
+  });
+
+  ['quien', 'correo', 'libre', 'memoria'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      st[id] = this.value;
+      $('nota').textContent = '';
+      guardar();
+    });
+  });
+
+  $('peor-porque').addEventListener('input', function () {
+    st.peorPorque = this.value;
+    $('nota').textContent = '';
+    guardar();
+  });
+
+  /* ---------- claro / oscuro ---------- */
+  var LLAVE_TEMA = 'encuesta-tema';
+  var SOL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/>' +
+    '<path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2' +
+    'M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>';
+  var LUNA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
+
+  // Sin elección guardada mandamos el sistema, como debe ser.
+  function temaActual() {
+    var puesto = document.documentElement.getAttribute('data-theme');
+    if (puesto) return puesto;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      ? 'dark' : 'light';
+  }
+
+  function pintarBotonTema() {
+    var oscuro = temaActual() === 'dark';
+    var b = $('tema');
+    b.innerHTML = oscuro ? SOL : LUNA;
+    b.setAttribute('aria-label', oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+    b.setAttribute('title', oscuro ? 'Modo claro' : 'Modo oscuro');
+  }
+
+  $('tema').addEventListener('click', function () {
+    var nuevo = temaActual() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', nuevo);
+    try { localStorage.setItem(LLAVE_TEMA, nuevo); } catch (e) {}
+    pintarBotonTema();
+  });
+
+  try {
+    var guardado = localStorage.getItem(LLAVE_TEMA);
+    if (guardado === 'dark' || guardado === 'light') {
+      document.documentElement.setAttribute('data-theme', guardado);
+    }
+  } catch (e) { /* almacenamiento bloqueado: se queda con el del sistema */ }
+
+  // Si nunca eligió, que siga al sistema cuando este cambie.
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    var alCambiar = function () {
+      var eligio = false;
+      try { eligio = !!localStorage.getItem(LLAVE_TEMA); } catch (e) {}
+      if (!eligio) pintarBotonTema();
+    };
+    if (mq.addEventListener) mq.addEventListener('change', alCambiar);
+    else if (mq.addListener) mq.addListener(alCambiar);
+  }
+
+  pintarBotonTema();
+
+  /* ---------- envío ---------- */
+  function enviar() {
+    var btn = $('seguir');
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+
+    fetch('/api/respuesta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quien: st.quien,
+        correo: st.correo,
+        orden: st.elegidos.slice(),
+        porque: st.elegidos.map(function (n) { return st.textos[n] || ''; }),
+        peor: st.peor,
+        peorPorque: st.peorPorque,
+        memoria: st.memoria,
+        libre: st.libre
+      })
+    })
+      .then(function (r) {
+        return r.json().then(function (j) {
+          if (!r.ok) throw new Error(j.error || 'Error del servidor');
+          return j;
+        });
+      })
+      .then(function () {
+        try { localStorage.removeItem(LLAVE); } catch (e) {}
+        ir(PASOS + 1);
+      })
+      .catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = 'Enviar';
+        $('nota').textContent = 'No se pudo enviar: ' + (err.message || 'intenta otra vez');
+      });
+  }
+
+  /* ---------- arranque ---------- */
+  if (location.pathname.replace(/\/+$/, '').endsWith('/resultados')) return;
+
+  fetch('/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (cfg) {
+      NOMBRES = cfg.candidatos; TOP = cfg.top; OBLIG = cfg.obligatorias;
+      barajar();
+      recuperar();
+      ir(1);
+    })
+    .catch(function () {
+      $('rejilla').innerHTML =
+        '<p class="ayuda">No se pudo cargar la lista de nombres. Recarga la página.</p>';
+    });
+})();
+
+/* ---------- vista de resultados ---------- */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esResultados = location.pathname.replace(/\/+$/, '').endsWith('/resultados');
+
+  $('vista-encuesta').hidden = esResultados;
+  $('vista-resultados').hidden = !esResultados;
+  if (!esResultados) return;
+
+  var clave = new URLSearchParams(location.search).get('clave') || '';
+
+  fetch('/api/resultados?clave=' + encodeURIComponent(clave))
+    .then(function (r) {
+      if (r.status === 403) throw new Error('Clave incorrecta. Agrega ?clave=… a la dirección.');
+      if (!r.ok) throw new Error('No se pudieron leer las respuestas.');
+      return r.json();
+    })
+    .then(pintar)
+    .catch(function (e) { $('cuantas').textContent = e.message; });
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function pintar(R) {
+    $('topPts').textContent = R.top;
+    $('cuantas').textContent = R.respuestas + ' respuesta' +
+      (R.respuestas === 1 ? '' : 's') + ' hasta ahora.';
+
+    if (!R.respuestas) { $('sinDatos').hidden = false; return; }
+    $('conDatos').hidden = false;
+
+    var tope = Math.max.apply(null, R.tabla.map(function (t) { return t.promedio; })) || 1;
+    var tb = $('filas');
+    R.tabla.forEach(function (t, i) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="num" style="color:var(--muted)">' + (i + 1) + '</td>' +
+        '<td class="nm">' + esc(t.nombre) + '</td>' +
+        '<td class="prom">' + t.promedio.toFixed(2) + '</td>' +
+        '<td style="width:120px"><div class="barra" style="width:' +
+          Math.max(2, Math.round((t.promedio / tope) * 110)) + 'px"></div></td>' +
+        '<td class="num">' + t.cobertura + '%</td>' +
+        '<td class="num">' + t.primeros + '</td>' +
+        '<td class="num">' + (t.posMedia === null ? '—' : t.posMedia.toFixed(1)) + '</td>' +
+        '<td class="num' + (t.descartes ? ' malo' : '') + '">' + (t.descartes || '—') + '</td>';
+      tb.appendChild(tr);
+    });
+
+    var cf = $('frases');
+    R.tabla.forEach(function (t) {
+      t.frases.forEach(function (f) {
+        var d = document.createElement('div');
+        d.className = 'frase';
+        d.innerHTML = '<b>' + esc(t.nombre) + '</b> — ' + esc(f.texto) +
+          '<span class="de">' + esc(f.quien) + ' · lo puso en lugar ' + f.lugar + '</span>';
+        cf.appendChild(d);
+      });
+    });
+
+    // Quién descartó qué, y por qué.
+    var cd = $('descartes');
+    var hayDescartes = false;
+    R.tabla.forEach(function (t) {
+      (t.quejas || []).forEach(function (q) {
+        hayDescartes = true;
+        var d = document.createElement('div');
+        d.className = 'frase mala';
+        d.innerHTML = '<b>' + esc(t.nombre) + '</b> — ' + esc(q.texto) +
+          '<span class="de">' + esc(q.quien) + '</span>';
+        cd.appendChild(d);
+      });
+    });
+    if (hayDescartes) $('bloqueDescartes').hidden = false;
+
+    // Prueba de memoria: lo que importa son los que se escribieron mal.
+    if (R.memoria && R.memoria.intentos) {
+      $('bloqueMemoria').hidden = false;
+      var m = R.memoria;
+      $('memoriaResumen').textContent =
+        m.aciertos + ' de ' + m.intentos + ' escribieron bien su favorito de memoria' +
+        (m.fallos.length ? '. Estos no:' : '.');
+      var cm = $('memoria');
+      m.fallos.forEach(function (f) {
+        var d = document.createElement('div');
+        d.className = 'frase mala';
+        d.innerHTML = 'Escribió <b>' + esc(f.escrito) + '</b> en vez de <b>' +
+          esc(f.objetivo) + '</b><span class="de">' + esc(f.quien) + '</span>';
+        cm.appendChild(d);
+      });
+    }
+
+    if (R.libres && R.libres.length) {
+      $('bloqueLibres').hidden = false;
+      R.libres.forEach(function (l) {
+        var d = document.createElement('div');
+        d.className = 'frase';
+        d.innerHTML = esc(l.texto) + '<span class="de">' + esc(l.quien) + '</span>';
+        $('libres').appendChild(d);
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>
