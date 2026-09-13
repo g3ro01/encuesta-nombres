@@ -235,8 +235,17 @@ app.post('/api/respuesta', async (req, res) => {
   }
 });
 
+// La clave que genera Render trae '+', '/' y '=' (es base64). En una query
+// string el '+' se decodifica como espacio, así que una clave pegada tal cual
+// nunca coincidía. Aceptamos las dos formas: la literal y la que trae espacios
+// donde iban los '+'.
+function claveOk(cruda) {
+  const v = String(cruda || '');
+  return v === CLAVE || v.replace(/ /g, '+') === CLAVE;
+}
+
 app.get('/api/resultados', async (req, res) => {
-  if (String(req.query.clave || '') !== CLAVE) {
+  if (!claveOk(req.query.clave)) {
     return res.status(403).json({ error: 'Clave incorrecta.' });
   }
   try {
@@ -249,7 +258,7 @@ app.get('/api/resultados', async (req, res) => {
 
 // Descarga en CSV, por si quieres meterlo a una hoja.
 app.get('/api/csv', async (req, res) => {
-  if (String(req.query.clave || '') !== CLAVE) return res.status(403).send('Clave incorrecta.');
+  if (!claveOk(req.query.clave)) return res.status(403).send('Clave incorrecta.');
   const filas = await leerTodas();
   const celda = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
 
