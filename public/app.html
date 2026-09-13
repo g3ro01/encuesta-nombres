@@ -329,6 +329,14 @@ td.prom{font-weight:700;color:var(--accent-texto);font-variant-numeric:tabular-n
 .frase.mala{border-left-color:var(--alerta)}
 td.num.malo{color:var(--alerta);font-weight:700}
 .vacio-msg{color:var(--muted);font-size:15px;margin-top:20px}
+.btn-csv{display:inline-flex;align-items:center;gap:8px;margin-top:14px;
+  background:var(--accent);color:var(--accent-ink);text-decoration:none;
+  font-weight:700;font-size:14.5px;padding:11px 18px;border-radius:10px;
+  border:1px solid transparent;box-shadow:var(--shadow);cursor:pointer}
+.btn-csv:hover{box-shadow:var(--lift)}
+.btn-csv:focus-visible{outline:2px solid var(--accent-texto);outline-offset:2px}
+/* display:inline-flex le gana al [hidden] del navegador; hay que decirlo aparte. */
+.btn-csv[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -452,6 +460,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
   <div class="res">
     <h1>Resultados</h1>
     <p class="intro" id="cuantas"></p>
+    <a id="bajarCsv" class="btn-csv" hidden>&#8595;&nbsp; Bajar CSV</a>
 
     <div id="sinDatos" class="vacio-msg" hidden>
       Todavía no llega ninguna respuesta. Comparte el link y vuelve aquí.
@@ -482,7 +491,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
       <div id="bloqueMemoria" hidden>
         <h2>Prueba de memoria</h2>
         <p class="mini" id="memoriaResumen"></p>
-        <div id="memoria"></div>
+        <div id="memoriaFallos"></div>
       </div>
 
       <div id="bloqueLibres" hidden>
@@ -1141,6 +1150,12 @@ td.num.malo{color:var(--alerta);font-weight:700}
     if (!R.respuestas) { $('sinDatos').hidden = false; return; }
     $('conDatos').hidden = false;
 
+    // El mismo permiso que abrió esta página sirve para bajar el archivo.
+    var bajar = $('bajarCsv');
+    bajar.href = '/api/csv?clave=' + encodeURIComponent(clave);
+    bajar.setAttribute('download', 'respuestas.csv');
+    bajar.hidden = false;
+
     var tope = Math.max.apply(null, R.tabla.map(function (t) { return t.promedio; })) || 1;
     var tb = $('filas');
     R.tabla.forEach(function (t, i) {
@@ -1189,14 +1204,15 @@ td.num.malo{color:var(--alerta);font-weight:700}
       $('bloqueMemoria').hidden = false;
       var m = R.memoria;
       $('memoriaResumen').textContent =
-        m.aciertos + ' de ' + m.intentos + ' escribieron bien su favorito de memoria' +
-        (m.fallos.length ? '. Estos no:' : '.');
-      var cm = $('memoria');
-      m.fallos.forEach(function (f) {
+        m.aciertos + ' de ' + m.intentos + ' escribieron bien su favorito de memoria.';
+      var cm = $('memoriaFallos');
+      (m.lista || m.fallos).forEach(function (f) {
         var d = document.createElement('div');
-        d.className = 'frase mala';
-        d.innerHTML = 'Escribió <b>' + esc(f.escrito) + '</b> en vez de <b>' +
-          esc(f.objetivo) + '</b><span class="de">' + esc(f.quien) + '</span>';
+        d.className = f.acierto ? 'frase' : 'frase mala';
+        d.innerHTML = f.acierto
+          ? 'Escribió <b>' + esc(f.escrito) + '</b> — bien<span class="de">' + esc(f.quien) + '</span>'
+          : 'Escribió <b>' + esc(f.escrito) + '</b> en vez de <b>' +
+            esc(f.objetivo) + '</b><span class="de">' + esc(f.quien) + '</span>';
         cm.appendChild(d);
       });
     }

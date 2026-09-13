@@ -156,7 +156,9 @@ function calcular(filas) {
       intentos: memoria.length,
       aciertos,
       // El dato que importa: cuántos NO supieron escribir su propio favorito.
-      fallos: memoria.filter(m => !m.acierto)
+      fallos: memoria.filter(m => !m.acierto),
+      // Y la lista completa, para ver qué escribió cada quien.
+      lista: memoria
     }
   };
 }
