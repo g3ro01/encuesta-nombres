@@ -25,13 +25,12 @@
   --calido:#B96F04;
   --ok:#00705F; --ok-bg:#C6EFE4;
   --alerta:#BE3C22;
-  /* Medallas del podio (#1 oro, #2 plata, #3 bronce). Son relleno como --accent,
-     así que no cambian con el tema; el borde oscuro las separa del botón verde. */
-  /* Oro brillante y amarillo, plata clara, bronce oscuro: se distinguen por
-     brillo y no solo por tono (un bronce claro se confundía con el oro). */
+  /* Podio: #1 oro, #2 azul, #3 lila. Son relleno como --accent, así que no
+     cambian con el tema; el borde las separa del botón verde. Oro brillante,
+     azul oscuro y lila claro: se distinguen por brillo, no solo por tono. */
   --oro:#FFC82E; --oro-borde:#B07A00; --oro-ink:#2E1C00;
-  --plata:#D5DDE2; --plata-borde:#6F7C85; --plata-ink:#172026;
-  --bronce:#9E5B27; --bronce-borde:#6B3810; --bronce-ink:#FFF3E6;
+  --azul:#2D6BE0; --azul-borde:#1A48A6; --azul-ink:#FFFFFF;
+  --lila:#C8A8F2; --lila-borde:#7C56BE; --lila-ink:#24103F;
   --shadow:0 1px 0 rgba(18,24,23,.04), 0 10px 26px -20px rgba(18,24,23,.55);
   --lift:0 2px 0 rgba(18,24,23,.06), 0 14px 32px -22px rgba(18,24,23,.65);
 }
@@ -124,11 +123,12 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
   box-shadow:var(--lift);
 }
 .opcion .rango{--t:26px}
-.opcion.sel .rango:not(.oro,.plata,.bronce){background:var(--accent-ink);color:var(--accent)}
 .opcion.lleno{opacity:.38}
 
 /* ---------- insignia de lugar, la misma en toda la encuesta ----------
-   Podio: #1 estrella de oro, #2 plata, #3 bronce. #4 y #5, círculo verde.
+   Podio: #1 estrella de oro, #2 círculo azul, #3 círculo lila.
+   #4 y #5 van solo como texto, del color de lo que los rodea, pero
+   ocupan el mismo ancho para que los nombres sigan alineados.
    --t es el diámetro del círculo; la estrella es un poco más grande
    para que el "#1" quepa en su centro. El "#" va más chico que el número:
    lo que se lee primero es el lugar. */
@@ -136,14 +136,14 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
   --t:24px;
   position:relative;flex:0 0 auto;width:var(--t);height:var(--t);
   display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
-  border-radius:50%;background:var(--accent);color:var(--accent-ink);
+  border-radius:50%;background:none;color:inherit;
   font-family:"Atkinson Hyperlegible",sans-serif;font-style:normal;font-weight:700;
   font-size:calc(var(--t) * .5);line-height:1;letter-spacing:-.02em;
 }
 .rango b{position:relative;font-weight:inherit}
 .rango i{font-style:normal;font-size:.68em;margin-right:.05em;opacity:.8;vertical-align:.12em}
-.rango.plata{background:var(--plata);color:var(--plata-ink);box-shadow:inset 0 0 0 1.5px var(--plata-borde)}
-.rango.bronce{background:var(--bronce);color:var(--bronce-ink);box-shadow:inset 0 0 0 1.5px var(--bronce-borde)}
+.rango.azul{background:var(--azul);color:var(--azul-ink);box-shadow:inset 0 0 0 1.5px var(--azul-borde)}
+.rango.lila{background:var(--lila);color:var(--lila-ink);box-shadow:inset 0 0 0 1.5px var(--lila-borde)}
 .rango.oro{
   width:calc(var(--t) * 1.3);height:calc(var(--t) * 1.3);
   background:none;color:var(--oro-ink);
@@ -650,9 +650,9 @@ td.num.malo{color:var(--alerta);font-weight:700}
 </dialog>
 
 <script>
-/* --- insignia de lugar: #1 estrella de oro, #2 plata, #3 bronce, los demás círculo.
+/* --- insignia de lugar: #1 estrella de oro, #2 azul, #3 lila, los demás solo texto.
    La comparten la encuesta y los resultados. --- */
-var MEDALLA = ['oro', 'plata', 'bronce'];
+var MEDALLA = ['oro', 'azul', 'lila'];
 var ESTRELLA = '<svg viewBox="-12 -12 24 24" aria-hidden="true"><path d="M0 -11L3.88 -5.34' +
   'L10.46 -3.4L6.28 2.04L6.47 8.9L0 6.6L-6.47 8.9L-6.28 2.04L-10.46 -3.4L-3.88 -5.34Z"/></svg>';
 
