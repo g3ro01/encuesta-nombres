@@ -266,6 +266,26 @@ input[type=text], input[type=email], .libre{
 }
 .libre{min-height:76px;resize:vertical;line-height:1.5}
 input[type=text]:focus, input[type=email]:focus, .libre:focus{outline:2px solid var(--accent-texto);outline-offset:1px;border-color:var(--accent-texto)}
+/* label.campo pone display:block y le gana al [hidden] del navegador. */
+.campo[hidden]{display:none}
+div.campo{margin-bottom:14px}
+.campo-t{display:block;font-size:13.5px;color:var(--ink-2);margin-bottom:8px}
+
+/* A qué se dedica: se escoge con un toque. */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  font-family:inherit;font-size:14.5px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;
+  transition:background .16s ease, border-color .16s ease, color .16s ease;
+}
+.chip:hover{border-color:var(--ink-2)}
+.chip.sel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+
+/* Permiso para mandar información: la casilla viene sin marcar. */
+.permiso{display:flex;gap:10px;align-items:flex-start;margin:-4px 0 18px;cursor:pointer;
+  font-size:14.5px;line-height:1.45;color:var(--ink)}
+.permiso input{width:20px;height:20px;flex:0 0 20px;margin:1px 0 0;accent-color:var(--accent-texto);cursor:pointer}
+.permiso small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
 
 .resumen{
   background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;
@@ -434,6 +454,27 @@ td.num.malo{color:var(--alerta);font-weight:700}
 .dlg h3{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:22px;line-height:1.2;margin:0 0 8px}
 .dlg p{margin:0 0 18px;color:var(--ink-2);font-size:14.5px;line-height:1.5}
 .dlg-botones{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+.dlg input[type=text]{margin:0 0 16px;font-family:"Newsreader",Georgia,serif;font-size:20px;font-weight:600}
+
+/* Filtro por ocupación: toda la página habla solo de ese grupo. */
+.filtro{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
+.filtro[hidden]{display:none}
+.filtro select{font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:9px;padding:7px 10px;cursor:pointer}
+.tag-oculto{font-family:"Atkinson Hyperlegible",sans-serif;font-size:11px;font-weight:700;color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+
+/* Nombres de la encuesta: agregar, renombrar, ocultar. */
+.agregar{display:flex;gap:9px;margin:12px 0}
+.agregar input[type=text]{flex:1;min-width:0}
+.nombres{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
+.nomb{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line-soft);
+  border-radius:10px;padding:10px 12px;box-shadow:var(--shadow)}
+.nomb.oculto{opacity:.62}
+.nomb .quien{flex:1;min-width:0}
+.nomb b{display:block;font-family:"Newsreader",Georgia,serif;font-size:19px;line-height:1.2;color:var(--ink)}
+.nomb small{display:block;color:var(--muted);font-size:12.5px;overflow-wrap:anywhere}
+.nomb .btn-mini{padding:7px 10px;font-size:13px}
 .resp .tag{display:inline-block;border:1px solid var(--line-soft);border-radius:999px;
   padding:2px 8px;font-size:12px;color:var(--muted);margin-left:6px}
 .resp.excluida .tag{color:var(--alerta);border-color:var(--alerta)}
@@ -540,10 +581,23 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <span>Tu nombre</span>
         <input type="text" id="quien" placeholder="Para saber de quién es cada opinión" autocomplete="name">
       </label>
+      <div class="campo">
+        <span class="campo-t" id="ocupacion-t">¿A qué te dedicas?</span>
+        <div class="chips" id="ocupaciones" role="group" aria-labelledby="ocupacion-t"></div>
+      </div>
+      <label class="campo" id="detalle-campo" hidden>
+        <span id="detalle-t"></span>
+        <input type="text" id="ocupacion-detalle" maxlength="160" autocomplete="off">
+      </label>
       <label class="campo">
         <span>Tu correo <em style="color:var(--muted)">(opcional)</em></span>
         <input type="email" id="correo" inputmode="email" autocomplete="email"
                placeholder="tunombre@correo.com">
+      </label>
+      <label class="permiso">
+        <input type="checkbox" id="acepta">
+        <span>Sí, mándame información cuando lances tu proyecto.
+          <small>Solo te escribiré si marcas esta casilla. Para eso necesito tu correo.</small></span>
       </label>
       <label class="campo">
         <span>¿Algo más? <em style="color:var(--muted)">(opcional)</em></span>
@@ -579,6 +633,10 @@ td.num.malo{color:var(--alerta);font-weight:700}
       <div>
         <h1>Resultados</h1>
         <p class="intro" id="cuantas"></p>
+        <label class="filtro" id="filtroCaja" hidden>
+          <span>Ver respuestas de</span>
+          <select id="filtro"></select>
+        </label>
       </div>
       <a id="bajarCsv" class="btn-csv" hidden>&#8595;&nbsp; Bajar CSV</a>
     </div>
@@ -596,14 +654,14 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <table>
           <thead><tr>
             <th>#</th><th>Nombre</th><th>Promedio</th><th></th>
-            <th>Lo eligió</th><th>1er lugar</th><th>Pos. media</th><th>Lo descartó</th>
+            <th>Lo eligió</th><th>1er lugar</th><th>Pos. media</th><th>Lo descartó</th><th>Lo vieron</th>
           </tr></thead>
           <tbody id="filas"></tbody>
         </table>
       </div>
-      <p class="mini">Promedio = puntos entre todas las respuestas. Cada 1er lugar vale
+      <p class="mini">Promedio = puntos entre las personas que vieron ese nombre. Cada 1er lugar vale
         <span id="topPts"></span> puntos y el último vale 1. «Lo eligió» es el porcentaje
-        de gente que lo metió a su top.</p>
+        de quienes lo vieron que lo metió a su top. Ojo con los nombres que vio poca gente.</p>
 
       <h2>A qué les suena que vende</h2>
       <div id="frases" class="grupos"></div>
@@ -635,6 +693,18 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <div id="respuestas" class="respuestas"></div>
       </div>
     </div>
+
+    <!-- Fuera de conDatos: los nombres se administran aunque no haya respuestas. -->
+    <div id="bloqueNombres" hidden>
+      <h2>Nombres de la encuesta</h2>
+      <p class="mini">Los cambios aplican a quien abra la encuesta desde ahora. Renombrar conserva
+        los votos que ya tenía. Ocultar lo quita de la encuesta sin perder sus resultados.</p>
+      <form class="agregar" id="formAgregar">
+        <input type="text" id="nuevoNombre" placeholder="Nombre nuevo" maxlength="30" autocomplete="off">
+        <button class="btn-mini" type="submit">Agregar</button>
+      </form>
+      <div id="listaNombres" class="nombres"></div>
+    </div>
   </div>
 </div>
 
@@ -642,6 +712,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
   <form method="dialog">
     <h3 id="dlg-titulo"></h3>
     <p id="dlg-texto"></p>
+    <input type="text" id="dlg-input" maxlength="30" autocomplete="off" hidden>
     <div class="dlg-botones">
       <button class="btn-mini" value="no" autofocus>Cancelar</button>
       <button class="btn-mini" value="si" id="dlg-si"></button>
@@ -670,7 +741,7 @@ function insignia(p) {
   'use strict';
 
   // La lista vive en el servidor (server.js). Aquí solo se recibe.
-  var NOMBRES = [], TOP = 5, OBLIG = 3;
+  var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [];
   var LLAVE = 'encuesta-nombres-v1';
 
   var $ = function (id) { return document.getElementById(id); };
@@ -678,7 +749,8 @@ function insignia(p) {
   // memoriaDe: el #1 que tenía cuando contestó la memoria. Mientras siga siendo
   // su #1, la prueba ya no se repite.
   var st = { elegidos: [], textos: {}, peor: '', peorPorque: '', memoria: '', memoriaDe: '',
-           quien: '', correo: '', libre: '', paso: 1, idx: 0 };
+           quien: '', correo: '', libre: '', ocupacion: '', ocupacionDetalle: '', acepta: false,
+           paso: 1, idx: 0 };
 
   /* --- guardar el avance para que nadie pierda lo escrito --- */
   function guardar() {
@@ -686,7 +758,8 @@ function insignia(p) {
       localStorage.setItem(LLAVE, JSON.stringify({
         elegidos: st.elegidos, textos: st.textos,
         peor: st.peor, peorPorque: st.peorPorque, memoria: st.memoria, memoriaDe: st.memoriaDe,
-        quien: st.quien, correo: st.correo, libre: st.libre
+        quien: st.quien, correo: st.correo, libre: st.libre,
+        ocupacion: st.ocupacion, ocupacionDetalle: st.ocupacionDetalle, acepta: st.acepta
       }));
     } catch (e) { /* modo privado o almacenamiento bloqueado: seguimos igual */ }
   }
@@ -700,6 +773,8 @@ function insignia(p) {
       st.peor = g.peor || ''; st.peorPorque = g.peorPorque || '';
       st.memoria = g.memoria || ''; st.memoriaDe = g.memoriaDe || '';
       st.quien = g.quien || ''; st.correo = g.correo || ''; st.libre = g.libre || '';
+      st.ocupacion = g.ocupacion || ''; st.ocupacionDetalle = g.ocupacionDetalle || '';
+      st.acepta = g.acepta === true;
     } catch (e) { /* nada que recuperar */ }
   }
 
@@ -991,6 +1066,49 @@ function insignia(p) {
     return f;
   }
 
+  /* ---------- a qué se dedica ---------- */
+  function pintarOcupaciones() {
+    var c = $('ocupaciones');
+    c.innerHTML = '';
+    OCUP.forEach(function (o) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.dataset.id = o.id;
+      b.textContent = o.nombre;
+      b.addEventListener('click', function () {
+        // Otra ocupación, otra pregunta: lo escrito para la anterior ya no aplica.
+        if (st.ocupacion !== o.id) st.ocupacionDetalle = '';
+        st.ocupacion = o.id;
+        $('nota').textContent = '';
+        guardar();
+        marcarOcupacion();
+      });
+      c.appendChild(b);
+    });
+    marcarOcupacion();
+  }
+
+  function marcarOcupacion() {
+    Array.prototype.forEach.call($('ocupaciones').children, function (b) {
+      var sel = b.dataset.id === st.ocupacion;
+      b.classList.toggle('sel', sel);
+      b.setAttribute('aria-pressed', sel ? 'true' : 'false');
+    });
+    var o = OCUP.filter(function (x) { return x.id === st.ocupacion; })[0];
+    var pide = !!(o && o.pregunta);
+    $('detalle-campo').hidden = !pide;
+    if (!pide) return;
+    var t = $('detalle-t');
+    t.textContent = o.pregunta + ' ';
+    var em = document.createElement('em');
+    em.style.color = 'var(--muted)';
+    em.textContent = '(opcional)';
+    t.appendChild(em);
+    $('ocupacion-detalle').placeholder = o.ejemplo || '';
+    $('ocupacion-detalle').value = st.ocupacionDetalle;
+  }
+
   /* ---------- navegación ---------- */
   var PASOS = 6;                       // pantallas antes del "gracias"
   var TITULOS = { 1: 'Escoge tus favoritos', 2: 'Arma tu podio',
@@ -1020,6 +1138,8 @@ function insignia(p) {
       $('quien').value = st.quien;
       $('correo').value = st.correo;
       $('libre').value = st.libre;
+      $('acepta').checked = st.acepta;
+      pintarOcupaciones();
     }
     if (p === PASOS + 1) pintarResumen('resumen-final', false);
 
@@ -1140,10 +1260,22 @@ function insignia(p) {
       st.quien = $('quien').value.trim();
       st.correo = $('correo').value.trim();
       st.libre = $('libre').value.trim();
+      st.ocupacionDetalle = $('ocupacion-detalle').value.trim();
       guardar();
       if (!st.quien) {
         $('nota').textContent = 'Ponme tu nombre para saber de quién es la opinión.';
         $('quien').focus();
+        return;
+      }
+      if (!st.ocupacion) {
+        $('nota').textContent = 'Dime a qué te dedicas, es un toque.';
+        var chip = $('ocupaciones').querySelector('.chip');
+        if (chip) chip.focus();
+        return;
+      }
+      if (st.acepta && !st.correo) {
+        $('nota').textContent = 'Para mandarte información necesito tu correo.';
+        $('correo').focus();
         return;
       }
       // El correo es opcional; si lo escribieron, al menos que tenga forma de correo.
@@ -1182,6 +1314,17 @@ function insignia(p) {
 
   $('peor-porque').addEventListener('input', function () {
     st.peorPorque = this.value;
+    $('nota').textContent = '';
+    guardar();
+  });
+
+  $('ocupacion-detalle').addEventListener('input', function () {
+    st.ocupacionDetalle = this.value;
+    guardar();
+  });
+
+  $('acepta').addEventListener('change', function () {
+    st.acepta = this.checked;
     $('nota').textContent = '';
     guardar();
   });
@@ -1260,7 +1403,11 @@ function insignia(p) {
         peor: st.peor,
         peorPorque: st.peorPorque,
         memoria: st.memoria,
-        libre: st.libre
+        libre: st.libre,
+        ocupacion: st.ocupacion,
+        ocupacionDetalle: st.ocupacionDetalle,
+        aceptaInfo: st.acepta,
+        vistos: NOMBRES.slice()
       })
     })
       .then(function (r) {
@@ -1287,6 +1434,7 @@ function insignia(p) {
     .then(function (r) { return r.json(); })
     .then(function (cfg) {
       NOMBRES = cfg.candidatos; TOP = cfg.top; OBLIG = cfg.obligatorias;
+      OCUP = cfg.ocupaciones || [];
       barajar();
       recuperar();
       ir(1);
@@ -1308,6 +1456,7 @@ function insignia(p) {
   if (!esResultados) return;
 
   var clave = new URLSearchParams(location.search).get('clave') || '';
+  var filtro = '';                     // ocupación que se está viendo; '' = todas
 
   cargarResultados();
 
@@ -1321,7 +1470,8 @@ function insignia(p) {
   }
 
   function cargarResultados() {
-    fetch('/api/resultados?clave=' + encodeURIComponent(clave))
+    fetch('/api/resultados?clave=' + encodeURIComponent(clave) +
+          (filtro ? '&ocupacion=' + encodeURIComponent(filtro) : ''))
       .then(function (r) {
         if (r.status === 403) throw new Error('Clave incorrecta. Agrega ?clave=… a la dirección.');
         if (!r.ok) throw new Error('No se pudieron leer las respuestas.');
@@ -1370,12 +1520,21 @@ function insignia(p) {
     var activas = typeof R.activas === 'number' ? R.activas : R.respuestas;
     var excluidas = R.excluidas || 0;
     $('cuantas').textContent = activas + ' respuesta' + (activas === 1 ? '' : 's') +
-      ' activas' + (excluidas ? ' · ' + excluidas + ' excluida' + (excluidas === 1 ? '' : 's') : '') +
+      ' activa' + (activas === 1 ? '' : 's') + (excluidas ? ' · ' + excluidas + ' excluida' + (excluidas === 1 ? '' : 's') : '') +
       ' · ' + total + ' total' + (total === 1 ? '' : 'es') + '.';
+
+    pintarFiltro(R);
+    pintarNombres(R.candidatos || [], R.tabla || []);
 
     $('sinDatos').hidden = true;
     $('conDatos').hidden = true;
-    if (!total) { $('sinDatos').hidden = false; return; }
+    if (!total) {
+      $('sinDatos').textContent = R.filtro
+        ? 'No hay respuestas de ese grupo.'
+        : 'Todavía no llega ninguna respuesta. Comparte el link y vuelve aquí.';
+      $('sinDatos').hidden = false;
+      return;
+    }
     $('conDatos').hidden = false;
     $('bloqueDescartes').hidden = true;
     $('bloqueMemoria').hidden = true;
@@ -1418,7 +1577,7 @@ function insignia(p) {
     metricas.appendChild(kpi(
       'Segundo',
       segundo ? segundo.nombre : 'Sin datos',
-      ganador && segundo ? 'A ' + (ganador.puntos - segundo.puntos) + ' puntos del primero' : ''
+      ganador && segundo ? 'A ' + (ganador.promedio - segundo.promedio).toFixed(2) + ' de promedio del primero' : ''
     ));
     metricas.appendChild(kpi(
       'Memoria',
@@ -1437,11 +1596,11 @@ function insignia(p) {
     var ideas = [];
     if (ganador) {
       ideas.push('<li><b>' + esc(ganador.nombre) + '</b> va arriba con ' +
-        ganador.puntos + ' puntos totales y ' + ganador.primeros + ' primeros lugares.</li>');
+        ganador.promedio.toFixed(2) + ' de promedio y ' + plural(ganador.primeros, 'primer lugar', 'primeros lugares') + '.</li>');
     }
     if (ganador && segundo) {
       ideas.push('<li>La distancia contra <b>' + esc(segundo.nombre) + '</b> es de ' +
-        (ganador.puntos - segundo.puntos) + ' puntos.</li>');
+        (ganador.promedio - segundo.promedio).toFixed(2) + ' de promedio.</li>');
     }
     if (memoria.intentos) {
       ideas.push('<li>Memoria: ' + esc(pct(tasaMemoria)) + ' de acierto; ' +
@@ -1464,14 +1623,15 @@ function insignia(p) {
       var tr = document.createElement('tr');
       tr.innerHTML =
         '<td class="num" style="color:var(--muted)">' + (i + 1) + '</td>' +
-        '<td class="nm">' + esc(t.nombre) + '</td>' +
+        '<td class="nm">' + esc(t.nombre) + (t.activo === false ? '<span class="tag-oculto">oculto</span>' : '') + '</td>' +
         '<td class="prom">' + t.promedio.toFixed(2) + '</td>' +
         '<td style="width:120px"><div class="barra" style="width:' +
           Math.max(2, Math.round((t.promedio / tope) * 110)) + 'px"></div></td>' +
         '<td class="num">' + t.cobertura + '%</td>' +
         '<td class="num">' + t.primeros + '</td>' +
         '<td class="num">' + (t.posMedia === null ? '—' : t.posMedia.toFixed(1)) + '</td>' +
-        '<td class="num' + (t.descartes ? ' malo' : '') + '">' + (t.descartes || '—') + '</td>';
+        '<td class="num' + (t.descartes ? ' malo' : '') + '">' + (t.descartes || '—') + '</td>' +
+        '<td class="num">' + (typeof t.vistos === 'number' ? t.vistos : '—') + '</td>';
       tb.appendChild(tr);
     });
 
@@ -1606,6 +1766,17 @@ function insignia(p) {
       cab.appendChild(bote);
       card.appendChild(cab);
 
+      var ocup = seccion('A qué se dedica');
+      ocup.appendChild(dato(r.ocupacionNombre || 'Sin dato', r.ocupacionDetalle,
+        r.ocupacionNombre ? '' : 'contestó antes de que existiera la pregunta'));
+      if (r.aceptaInfo) {
+        var ok = document.createElement('span');
+        ok.className = 'dc';
+        ok.innerHTML = '<span class="bien">Acepta</span> que le mandes información';
+        ocup.appendChild(ok);
+      }
+      card.appendChild(ocup);
+
       var top = seccion('Su top y qué cree que vende');
       if (!orden.length) top.appendChild(dato('Sin ranking', '', ''));
       orden.forEach(function (n, p) {
@@ -1677,12 +1848,149 @@ function insignia(p) {
     si.className = 'btn-mini' + (o.peligro ? ' peligro' : '');
     d.returnValue = '';
     d.showModal();
+    var campo = $('dlg-input');
+    if (!campo.hidden) { campo.focus(); campo.select(); }
     return new Promise(function (listo) {
       d.addEventListener('close', function () { listo(d.returnValue === 'si'); }, { once: true });
     });
   }
   // Tocar fuera del cuadro es cancelar.
   $('confirmar').addEventListener('click', function (e) { if (e.target === this) this.close(); });
+
+  // El mismo diálogo, con un campo de texto. Resuelve con el texto o null.
+  function pedirTexto(o) {
+    var campo = $('dlg-input');
+    campo.hidden = false;
+    campo.value = o.valor || '';
+    return confirmar(o).then(function (ok) {
+      campo.hidden = true;
+      return ok ? campo.value.trim() : null;
+    });
+  }
+  // Enter en el campo es aceptar; sin esto el formulario usaría el primer
+  // botón, que es Cancelar.
+  $('dlg-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); $('dlg-si').click(); }
+  });
+
+  function api(ruta, metodo, cuerpo) {
+    return fetch(ruta + '?clave=' + encodeURIComponent(clave), {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo || {})
+    }).then(function (resp) {
+      return resp.json().then(function (j) {
+        if (!resp.ok) throw new Error(j.error || 'No se pudo.');
+        return j;
+      });
+    });
+  }
+
+  /* --- filtro por ocupación --- */
+  function pintarFiltro(R) {
+    var cuenta = R.porOcupacion || {};
+    var todas = Object.keys(cuenta).reduce(function (s, k) { return s + cuenta[k]; }, 0);
+    var opciones = [{ id: '', nombre: 'Todas', n: todas }];
+    (R.ocupaciones || []).concat([{ id: 'sin', nombre: 'Sin dato' }]).forEach(function (o) {
+      if (cuenta[o.id] || o.id === filtro) opciones.push({ id: o.id, nombre: o.nombre, n: cuenta[o.id] || 0 });
+    });
+    var sel = $('filtro');
+    sel.innerHTML = '';
+    opciones.forEach(function (o) {
+      var op = document.createElement('option');
+      op.value = o.id;
+      op.textContent = o.nombre + ' (' + o.n + ')';
+      op.selected = o.id === filtro;
+      sel.appendChild(op);
+    });
+    $('filtroCaja').hidden = false;
+  }
+  $('filtro').addEventListener('change', function () {
+    filtro = this.value;
+    cargarResultados();
+  });
+
+  /* --- nombres de la encuesta --- */
+  function pintarNombres(candidatos, tabla) {
+    var vistos = {};
+    tabla.forEach(function (t) { vistos[t.nombre] = t.vistos; });
+    var c = limpiar('listaNombres');
+    candidatos.forEach(function (k) {
+      var fila = document.createElement('div');
+      fila.className = 'nomb' + (k.activo ? '' : ' oculto');
+
+      var info = document.createElement('div');
+      info.className = 'quien';
+      info.innerHTML = '<b>' + esc(k.nombre) + '</b><small>' +
+        (k.activo ? 'Visible' : 'Oculto') + ' · lo vieron ' + (vistos[k.nombre] || 0) +
+        (k.alias && k.alias.length ? ' · antes: ' + esc(k.alias.join(', ')) : '') + '</small>';
+
+      var ren = document.createElement('button');
+      ren.type = 'button';
+      ren.className = 'btn-mini';
+      ren.textContent = 'Renombrar';
+      ren.addEventListener('click', function () { renombrar(k); });
+
+      var vis = document.createElement('button');
+      vis.type = 'button';
+      vis.className = 'btn-mini' + (k.activo ? ' alerta' : '');
+      vis.textContent = k.activo ? 'Ocultar' : 'Mostrar';
+      vis.addEventListener('click', function () { cambiarVisible(k, !k.activo); });
+
+      fila.appendChild(info);
+      fila.appendChild(ren);
+      fila.appendChild(vis);
+      c.appendChild(fila);
+    });
+    $('bloqueNombres').hidden = false;
+  }
+
+  $('formAgregar').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var campo = $('nuevoNombre');
+    var nombre = campo.value.trim();
+    if (!nombre) { campo.focus(); return; }
+    confirmar({
+      titulo: '¿Agregar «' + nombre + '» a la encuesta?',
+      texto: 'Aparecerá a quien abra la encuesta desde ahora. Su promedio se calcula ' +
+             'solo con las personas que lo vean.',
+      si: 'Agregar'
+    }).then(function (ok) {
+      if (!ok) return;
+      return api('/api/candidatos', 'POST', { nombre: nombre }).then(function () {
+        campo.value = '';
+        cargarResultados();
+      });
+    }).catch(function (err) { window.alert(err.message); });
+  });
+
+  function renombrar(k) {
+    pedirTexto({
+      titulo: 'Renombrar «' + k.nombre + '»',
+      texto: 'Los votos que ya tiene pasan al nombre nuevo. Quien abra la encuesta ' +
+             'desde ahora verá el nombre nuevo.',
+      si: 'Guardar',
+      valor: k.nombre
+    }).then(function (nombre) {
+      if (!nombre || nombre === k.nombre) return;
+      return api('/api/candidatos/' + encodeURIComponent(k.id), 'POST', { nombre: nombre })
+        .then(cargarResultados);
+    }).catch(function (err) { window.alert(err.message); });
+  }
+
+  function cambiarVisible(k, activo) {
+    confirmar(activo
+      ? { titulo: '¿Volver a mostrar «' + k.nombre + '»?',
+          texto: 'Aparecerá otra vez en la encuesta.', si: 'Mostrar' }
+      : { titulo: '¿Ocultar «' + k.nombre + '»?',
+          texto: 'Ya no aparecerá en la encuesta. Sus votos se conservan y puedes volver a mostrarlo.',
+          si: 'Ocultar' })
+      .then(function (ok) {
+        if (!ok) return;
+        return api('/api/candidatos/' + encodeURIComponent(k.id), 'POST', { activo: activo })
+          .then(cargarResultados);
+      }).catch(function (err) { window.alert(err.message); });
+  }
 
   function borrarRespuesta(r, btn) {
     confirmar({
