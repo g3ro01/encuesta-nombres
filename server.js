@@ -109,6 +109,18 @@ async function cambiarExclusion(id, excluida) {
   return r.rows[0] || null;
 }
 
+// Para siempre: a diferencia de excluir, esto no se puede deshacer.
+async function borrar(id) {
+  if (!pool) {
+    const i = memoria.findIndex(f => f.id === id);
+    if (i === -1) return false;
+    memoria.splice(i, 1);
+    return true;
+  }
+  const r = await pool.query('DELETE FROM respuestas WHERE id = $1', [id]);
+  return r.rowCount > 0;
+}
+
 /* ---------- cálculo ---------- */
 
 /** Borda: el 1er lugar vale TOP puntos, el último vale 1. */
@@ -325,6 +337,21 @@ app.post('/api/respuesta/:id/exclusion', async (req, res) => {
   } catch (err) {
     console.error('[error] al cambiar exclusion:', err.message);
     res.status(500).json({ error: 'No se pudo actualizar la respuesta.' });
+  }
+});
+
+app.delete('/api/respuesta/:id', async (req, res) => {
+  if (!claveOk(req.query.clave)) return res.status(403).json({ error: 'Clave incorrecta.' });
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: 'Respuesta inválida.' });
+  }
+  try {
+    if (!(await borrar(id))) return res.status(404).json({ error: 'Respuesta no encontrada.' });
+    res.json({ ok: true, id });
+  } catch (err) {
+    console.error('[error] al borrar:', err.message);
+    res.status(500).json({ error: 'No se pudo borrar la respuesta.' });
   }
 });
 
