@@ -25,6 +25,8 @@
   --calido:#B96F04;
   --ok:#00705F; --ok-bg:#C6EFE4;
   --alerta:#BE3C22;
+  /* Oro: solo para el #1. Es relleno como --accent, así que no cambia con el tema. */
+  --oro:#F5B83D; --oro-borde:#A86500; --oro-ink:#2E1C00;
   --shadow:0 1px 0 rgba(18,24,23,.04), 0 10px 26px -20px rgba(18,24,23,.55);
   --lift:0 2px 0 rgba(18,24,23,.06), 0 14px 32px -22px rgba(18,24,23,.65);
 }
@@ -116,18 +118,34 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
   background:var(--accent);border-color:var(--accent);color:var(--accent-ink);
   box-shadow:var(--lift);
 }
-.opcion .n{
-  font-family:"Atkinson Hyperlegible",sans-serif;font-size:11px;font-weight:700;
-  width:20px;height:20px;flex:0 0 20px;border-radius:50%;
-  background:var(--accent-ink);color:var(--accent);
-  display:flex;align-items:center;justify-content:center;
-}
+.opcion .rango{--t:22px}
+.opcion.sel .rango:not(.oro){background:var(--accent-ink);color:var(--accent)}
 .opcion.lleno{opacity:.38}
+
+/* ---------- insignia de lugar, la misma en toda la encuesta ----------
+   #1 es una estrella dorada; del #2 en adelante, círculo verde.
+   --t es el diámetro del círculo; la estrella es un poco más grande
+   para que el "#1" quepa en su centro. */
+.rango{
+  --t:24px;
+  position:relative;flex:0 0 auto;width:var(--t);height:var(--t);
+  display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
+  border-radius:50%;background:var(--accent);color:var(--accent-ink);
+  font-family:"Atkinson Hyperlegible",sans-serif;font-style:normal;font-weight:700;
+  font-size:calc(var(--t) * .45);line-height:1;letter-spacing:-.03em;
+}
+.rango b{position:relative;font-weight:inherit}
+.rango.oro{
+  width:calc(var(--t) * 1.3);height:calc(var(--t) * 1.3);
+  background:none;color:var(--oro-ink);
+}
+.rango.oro svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.rango.oro path{fill:var(--oro);stroke:var(--oro-borde);stroke-width:1.3;stroke-linejoin:round}
 
 /* ---------- 2 · ordenar (arrastrable) ---------- */
 .orden{display:flex;flex-direction:column;gap:8px;position:relative}
 .rank{
-  display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;
+  display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;
   background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;
   padding:12px 14px;box-shadow:var(--shadow);
   position:relative;will-change:transform;
@@ -139,12 +157,8 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
   z-index:5;box-shadow:var(--lift);border-color:var(--accent-texto);
 }
 .rank.movido{transform:scale(1.02)}
-.puesto{
-  font-family:"Newsreader",Georgia,serif;font-size:15px;font-weight:600;
-  width:30px;height:30px;border-radius:50%;
-  background:var(--accent);color:var(--accent-ink);
-  display:flex;align-items:center;justify-content:center;
-}
+.rank .puesto{display:flex;justify-content:center}
+.rank .rango{--t:32px}
 .rank .quien{
   font-family:"Newsreader",Georgia,serif;font-size:22px;font-weight:600;letter-spacing:-.01em;
 }
@@ -177,8 +191,10 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
 }
 .ficha .lugar{
   font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
-  font-weight:700;margin:0 0 6px;
+  font-weight:700;margin:0 0 10px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
 }
+.ficha .lugar .rango{--t:26px;letter-spacing:-.03em}
 .ficha h2{
   font-family:"Newsreader",Georgia,serif;font-weight:600;
   font-size:clamp(32px,9vw,44px);line-height:1;margin:0 0 4px;letter-spacing:-.02em;
@@ -224,6 +240,7 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
   font-family:"Newsreader",Georgia,serif;font-weight:600;
   font-size:clamp(22px,6vw,28px);line-height:1.15;margin:0 0 8px;letter-spacing:-.01em;
 }
+.memoria h2 .rango{--t:24px;margin:-4px -3px 0 0}
 .memoria p{color:var(--ink-2);font-size:15px;margin:0 0 20px}
 .memoria input{
   text-align:center;font-family:"Newsreader",Georgia,serif;
@@ -246,13 +263,13 @@ input[type=text]:focus, input[type=email]:focus, .libre:focus{outline:2px solid 
   overflow:hidden;box-shadow:var(--shadow);margin:6px 0 22px;
 }
 .resumen .fila{
-  display:grid;grid-template-columns:26px 1fr auto;gap:11px;align-items:baseline;
+  display:grid;grid-template-columns:32px 1fr auto;gap:11px;align-items:start;
   padding:11px 14px;border-bottom:1px solid var(--line-soft);
 }
 .resumen .fila:last-child{border-bottom:0}
-.resumen .p{
-  font-family:"Newsreader",Georgia,serif;font-size:13px;font-weight:600;color:var(--muted);
-}
+/* Alto de una línea del nombre: la insignia queda centrada en el renglón. */
+.resumen .p{height:24px;display:flex;align-items:center;justify-content:center}
+.resumen .editar{align-self:center}
 .resumen .nm{font-family:"Newsreader",Georgia,serif;font-size:19px;font-weight:600;line-height:1.25}
 .resumen .dc{display:block;font-family:inherit;font-size:13.5px;color:var(--muted);margin-top:2px}
 .editar{
@@ -421,13 +438,13 @@ td.num.malo{color:var(--alerta);font-weight:700}
     <!-- 1 · elegir -->
     <section class="pantalla" id="p1">
       <p class="ayuda">Escoge los que te laten, en el orden que te gusten.
-        Tócalos otra vez para quitarlos.</p>
+        Si quieres deseleccionar uno, sólo tócalo otra vez.</p>
       <div class="rejilla" id="rejilla"></div>
     </section>
 
     <!-- 2 · ordenar -->
     <section class="pantalla" id="p2" hidden>
-      <p class="ayuda">Este es tu podio. Arrastra desde las rayitas para reacomodarlos.</p>
+      <p class="ayuda">Este es tu podio. Si quieres reacomodarlos sólo arrastra desde las rayitas.</p>
       <div class="orden" id="orden"></div>
       <p class="pista">También puedes moverlos con las flechas del teclado.</p>
     </section>
@@ -440,7 +457,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
       <label class="campo">
         <span>¿Por qué ese?</span>
         <textarea class="libre" id="peor-porque"
-                  placeholder="Suena feo, no se entiende, me recuerda a otra cosa…"></textarea>
+                  placeholder="Por ejemplo: suena feo, no se entiende, me recuerda a otra cosa, etc…"></textarea>
       </label>
     </section>
 
@@ -450,8 +467,8 @@ td.num.malo{color:var(--alerta);font-weight:700}
       <div class="ficha">
         <p class="lugar" id="ficha-lugar"></p>
         <h2 id="ficha-nombre"></h2>
-        <p class="pregunta">Sin pensarlo mucho: ¿qué crees que vende?</p>
-        <textarea id="ficha-texto" placeholder="Una tiendita, una app de citas, un banco…"></textarea>
+        <p class="pregunta">Sin pensarlo mucho: ¿qué producto/servicio crees que vende o de qué crees que es el negocio?</p>
+        <textarea id="ficha-texto" placeholder="Por ejemplo: Una tiendita, una app de citas, un banco…"></textarea>
         <p class="opcional" id="ficha-opcional" hidden>Este puedes saltarlo si no se te ocurre nada.</p>
         <button class="saltar" id="saltar" hidden type="button">Saltar este</button>
       </div>
@@ -466,7 +483,8 @@ td.num.malo{color:var(--alerta);font-weight:700}
             <path d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3z"/><path d="M9.5 20h5"/>
           </svg>
         </div>
-        <h2>Sin regresar a verlo: ¿cómo se escribe tu favorito?</h2>
+        <h2>Sin regresar a verlo: ¿cómo se escribe tu favorito, el que marcaste como
+          <span id="mem-uno">#1</span>?</h2>
         <p>No vale asomarse. Si no te acuerdas exacto, escribe como creas que va.</p>
         <input type="text" id="memoria" autocomplete="off" autocapitalize="words"
                spellcheck="false" placeholder="Escríbelo aquí">
@@ -475,7 +493,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
     <!-- 6 · firmar -->
     <section class="pantalla" id="p6" hidden>
-      <p class="ayuda">Esto es lo que vas a mandar. Toca cualquiera para corregirlo.</p>
+      <p class="ayuda">Esto es lo que vas a mandar. Si quieres corregir alguno, sólo tócalo.</p>
       <div class="resumen" id="resumen"></div>
 
       <label class="campo">
@@ -489,7 +507,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
       </label>
       <label class="campo">
         <span>¿Algo más? <em style="color:var(--muted)">(opcional)</em></span>
-        <textarea class="libre" id="libre" placeholder="Un nombre que te chocó, una idea mejor, lo que sea"></textarea>
+        <textarea class="libre" id="libre" placeholder="Por ejemplo: Un nombre que te chocó, una idea mejor, lo que sea"></textarea>
       </label>
     </section>
 
@@ -497,7 +515,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
     <section class="pantalla" id="pf" hidden>
       <div class="gracias">
         <h2>¡Gracias!</h2>
-        <p>De verdad me sirve.</p>
+        <p>¡Tu opinión es muy importante para mí!</p>
       </div>
       <div class="resumen" id="resumen-final"></div>
     </section>
@@ -589,7 +607,9 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
   var $ = function (id) { return document.getElementById(id); };
 
-  var st = { elegidos: [], textos: {}, peor: '', peorPorque: '', memoria: '',
+  // memoriaDe: el #1 que tenía cuando contestó la memoria. Mientras siga siendo
+  // su #1, la prueba ya no se repite.
+  var st = { elegidos: [], textos: {}, peor: '', peorPorque: '', memoria: '', memoriaDe: '',
            quien: '', correo: '', libre: '', paso: 1, idx: 0 };
 
   /* --- guardar el avance para que nadie pierda lo escrito --- */
@@ -597,7 +617,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
     try {
       localStorage.setItem(LLAVE, JSON.stringify({
         elegidos: st.elegidos, textos: st.textos,
-        peor: st.peor, peorPorque: st.peorPorque, memoria: st.memoria,
+        peor: st.peor, peorPorque: st.peorPorque, memoria: st.memoria, memoriaDe: st.memoriaDe,
         quien: st.quien, correo: st.correo, libre: st.libre
       }));
     } catch (e) { /* modo privado o almacenamiento bloqueado: seguimos igual */ }
@@ -610,7 +630,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
                                       .slice(0, TOP);
       st.textos = g.textos || {};
       st.peor = g.peor || ''; st.peorPorque = g.peorPorque || '';
-      st.memoria = g.memoria || '';
+      st.memoria = g.memoria || ''; st.memoriaDe = g.memoriaDe || '';
       st.quien = g.quien || ''; st.correo = g.correo || ''; st.libre = g.libre || '';
     } catch (e) { /* nada que recuperar */ }
   }
@@ -625,6 +645,20 @@ td.num.malo{color:var(--alerta);font-weight:700}
     }
   }
 
+  /* --- insignia de lugar: #1 estrella dorada, los demás círculo --- */
+  var ESTRELLA = '<svg viewBox="-12 -12 24 24" aria-hidden="true"><path d="M0 -11L3.88 -5.34' +
+    'L10.46 -3.4L6.28 2.04L6.47 8.9L0 6.6L-6.47 8.9L-6.28 2.04L-10.46 -3.4L-3.88 -5.34Z"/></svg>';
+
+  function insignia(p) {
+    var s = document.createElement('span');
+    s.className = 'rango' + (p === 0 ? ' oro' : '');
+    if (p === 0) s.innerHTML = ESTRELLA;
+    var t = document.createElement('b');
+    t.textContent = '#' + (p + 1);
+    s.appendChild(t);
+    return s;
+  }
+
   /* ---------- 1 · elegir ---------- */
   function pintarRejilla() {
     var c = $('rejilla');
@@ -637,12 +671,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
                     (pos === -1 && st.elegidos.length >= TOP ? ' lleno' : '');
       b.setAttribute('aria-pressed', pos !== -1 ? 'true' : 'false');
 
-      if (pos !== -1) {
-        var badge = document.createElement('span');
-        badge.className = 'n';
-        badge.textContent = pos + 1;
-        b.appendChild(badge);
-      }
+      if (pos !== -1) b.appendChild(insignia(pos));
       b.appendChild(document.createTextNode(n));
 
       // Elegido: siempre se puede quitar. No elegido y sin cupo: apagado.
@@ -675,7 +704,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
       var puesto = document.createElement('div');
       puesto.className = 'puesto';
-      puesto.textContent = p + 1;
+      puesto.appendChild(insignia(p));
 
       var nom = document.createElement('div');
       nom.className = 'quien';
@@ -798,7 +827,9 @@ td.num.malo{color:var(--alerta);font-weight:700}
       pts.appendChild(b);
     }
 
-    $('ficha-lugar').textContent = 'Tu lugar ' + (st.idx + 1);
+    var lugar = $('ficha-lugar');
+    lugar.textContent = 'Tu lugar';
+    lugar.appendChild(insignia(st.idx));
     $('ficha-nombre').textContent = n;
     var ta = $('ficha-texto');
     ta.value = st.textos[n] || '';
@@ -839,7 +870,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
       var num = document.createElement('div');
       num.className = 'p';
-      num.textContent = (p + 1) + '.';
+      num.appendChild(insignia(p));
 
       var med = document.createElement('div');
       var nm = document.createElement('span');
@@ -863,10 +894,11 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
     // Lo demás que va en el envío, para que nada viaje a ciegas.
     if (st.peor) c.appendChild(filaExtra('Descartas', st.peor, st.peorPorque, conEditar ? 3 : 0));
+    // Sin "Editar": aquí ya se ve el podio completo, corregirla sería copiar.
     if (st.memoria) c.appendChild(filaExtra('De memoria', st.memoria,
       st.memoria.toLowerCase() === (st.elegidos[0] || '').toLowerCase()
         ? 'Coincide con tu #1' : 'Tu #1 es ' + st.elegidos[0],
-      conEditar ? 5 : 0));
+      0));
   }
 
   function filaExtra(etiqueta, valor, nota, pasoEditar) {
@@ -911,7 +943,15 @@ td.num.malo{color:var(--alerta);font-weight:700}
                   3: 'El que descartarías', 4: '¿Qué te suena que vende?',
                   5: 'De memoria', 6: 'Revisa y manda', 7: 'Listo' };
 
+  // La memoria se contesta una sola vez. Si después cambia su #1, la pregunta
+  // ya es otra y se vuelve a hacer.
+  function memoriaCerrada() {
+    return !!st.memoria && st.memoriaDe === st.elegidos[0];
+  }
+
   function ir(p) {
+    if (p === 5 && memoriaCerrada()) p = 6;
+    if (p === 5 && st.memoriaDe) { st.memoria = ''; st.memoriaDe = ''; guardar(); }
     st.paso = p;
     for (var k = 1; k <= PASOS; k++) $('p' + k).hidden = (k !== p);
     $('pf').hidden = (p !== PASOS + 1);
@@ -1036,6 +1076,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
         $('memoria').focus();
         return;
       }
+      st.memoriaDe = st.elegidos[0];
       guardar();
       ir(6);
       return;
@@ -1071,7 +1112,10 @@ td.num.malo{color:var(--alerta);font-weight:700}
       return;
     }
     if (p === 5) { st.idx = TOP - 1; ir(4); return; }
-    if (p === 6) { ir(5); }
+    if (p === 6) {
+      if (memoriaCerrada()) { st.idx = TOP - 1; ir(4); }
+      else ir(5);
+    }
   });
 
   ['quien', 'correo', 'libre', 'memoria'].forEach(function (id) {
@@ -1141,6 +1185,9 @@ td.num.malo{color:var(--alerta);font-weight:700}
   }
 
   pintarBotonTema();
+
+  // El "#1" de la pregunta de memoria, con la misma estrella del podio.
+  $('mem-uno').replaceWith(insignia(0));
 
   /* ---------- envío ---------- */
   function enviar() {
