@@ -347,6 +347,27 @@ div.campo{margin-bottom:14px}
   border:1px dashed var(--line);border-radius:10px;padding:13px 15px;
   font-size:13.5px;color:var(--muted);
 }
+
+/* ---------- 6 · revelar el proyecto y elegir finalista ---------- */
+.revela{
+  background:var(--ok-bg);border:1px solid var(--ok);border-radius:14px;
+  padding:18px 20px 20px;margin-bottom:24px;
+}
+.revela .lugar{
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);
+  font-weight:700;margin:0 0 8px;
+}
+.revela .que{
+  font-family:"Newsreader",Georgia,serif;font-weight:500;
+  font-size:clamp(20px,5.4vw,24px);line-height:1.3;margin:0;
+  color:var(--ink);letter-spacing:-.01em;text-wrap:pretty;
+}
+.pregunta-final{
+  font-family:"Newsreader",Georgia,serif;font-weight:600;
+  font-size:22px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;
+}
+.pregunta-final + .ayuda{margin-bottom:16px}
+#finalista{margin-bottom:20px}
 </style>
 <style>
 /* ---------- vista de resultados ---------- */
@@ -572,9 +593,27 @@ td.num.malo{color:var(--alerta);font-weight:700}
       </div>
     </section>
 
-    <!-- 6 · firmar -->
+    <!-- 6 · revelar el proyecto y elegir finalista -->
     <section class="pantalla" id="p6" hidden>
-      <p class="ayuda">Esto es lo que vas a mandar. Si quieres corregir alguno, sólo tócalo.</p>
+      <p class="ayuda">Hasta aquí opinaste sin saber de qué era. Ya te puedo contar.</p>
+      <div class="revela">
+        <p class="lugar">El proyecto</p>
+        <p class="que" id="proyecto"></p>
+      </div>
+      <h2 class="pregunta-final">Sabiendo esto, ¿cuál nombre le queda mejor?</h2>
+      <p class="ayuda">Puede ser el mismo que ya traías o uno distinto. Las dos cosas me sirven.</p>
+      <div class="rejilla" id="finalista"></div>
+      <label class="campo">
+        <span id="finalista-etiqueta">¿Por qué ese? <em style="color:var(--muted)">(opcional)</em></span>
+        <textarea class="libre" id="finalista-porque" maxlength="400"
+                  placeholder="Suena a lo que hace, se oye serio, se me queda…"></textarea>
+      </label>
+    </section>
+
+    <!-- 7 · firmar -->
+    <section class="pantalla" id="p7" hidden>
+      <p class="ayuda">Esto es lo que vas a mandar. Tus primeras respuestas ya no se cambian:
+        así se queda limpia la impresión que tuviste antes de saber de qué era.</p>
       <div class="resumen" id="resumen"></div>
 
       <label class="campo">
@@ -654,7 +693,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <table>
           <thead><tr>
             <th>#</th><th>Nombre</th><th>Promedio</th><th></th>
-            <th>Lo eligió</th><th>1er lugar</th><th>Pos. media</th><th>Lo descartó</th><th>Lo vieron</th>
+            <th>Lo eligió</th><th>1er lugar</th><th>Finalista</th><th>Pos. media</th><th>Lo descartó</th><th>Lo vieron</th>
           </tr></thead>
           <tbody id="filas"></tbody>
         </table>
@@ -662,6 +701,14 @@ td.num.malo{color:var(--alerta);font-weight:700}
       <p class="mini">Promedio = puntos entre las personas que vieron ese nombre. Cada 1er lugar vale
         <span id="topPts"></span> puntos y el último vale 1. «Lo eligió» es el porcentaje
         de quienes lo vieron que lo metió a su top. Ojo con los nombres que vio poca gente.</p>
+
+      <div id="bloqueFinal" hidden>
+        <h2>Ya sabiendo de qué es</h2>
+        <p class="mini" id="finalNota"></p>
+        <div class="memoria-stats" id="finalResumen"></div>
+        <div id="finalGrupos" class="grupos"></div>
+        <div id="finalCambios" class="grupos"></div>
+      </div>
 
       <h2>A qué les suena que vende</h2>
       <div id="frases" class="grupos"></div>
@@ -741,14 +788,16 @@ function insignia(p) {
   'use strict';
 
   // La lista vive en el servidor (server.js). Aquí solo se recibe.
-  var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [];
+  var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [], PROYECTO = '';
   var LLAVE = 'encuesta-nombres-v1';
 
   var $ = function (id) { return document.getElementById(id); };
 
   // memoriaDe: el #1 que tenía cuando contestó la memoria. Mientras siga siendo
   // su #1, la prueba ya no se repite.
+  // revelado: ya vio de qué es el proyecto. De ahí no hay regreso a lo contestado a ciegas.
   var st = { elegidos: [], textos: {}, peor: '', peorPorque: '', memoria: '', memoriaDe: '',
+           finalista: '', finalistaPorque: '', revelado: false,
            quien: '', correo: '', libre: '', ocupacion: '', ocupacionDetalle: '', acepta: false,
            paso: 1, idx: 0 };
 
@@ -758,6 +807,7 @@ function insignia(p) {
       localStorage.setItem(LLAVE, JSON.stringify({
         elegidos: st.elegidos, textos: st.textos,
         peor: st.peor, peorPorque: st.peorPorque, memoria: st.memoria, memoriaDe: st.memoriaDe,
+        finalista: st.finalista, finalistaPorque: st.finalistaPorque, revelado: st.revelado,
         quien: st.quien, correo: st.correo, libre: st.libre,
         ocupacion: st.ocupacion, ocupacionDetalle: st.ocupacionDetalle, acepta: st.acepta
       }));
@@ -772,6 +822,9 @@ function insignia(p) {
       st.textos = g.textos || {};
       st.peor = g.peor || ''; st.peorPorque = g.peorPorque || '';
       st.memoria = g.memoria || ''; st.memoriaDe = g.memoriaDe || '';
+      st.finalista = NOMBRES.indexOf(g.finalista) !== -1 ? g.finalista : '';
+      st.finalistaPorque = g.finalistaPorque || '';
+      st.revelado = g.revelado === true;
       st.quien = g.quien || ''; st.correo = g.correo || ''; st.libre = g.libre || '';
       st.ocupacion = g.ocupacion || ''; st.ocupacionDetalle = g.ocupacionDetalle || '';
       st.acepta = g.acepta === true;
@@ -989,7 +1042,43 @@ function insignia(p) {
     $('peor-porque').value = st.peorPorque;
   }
 
-  /* ---------- 4 · resumen ---------- */
+  /* ---------- 6 · finalista, ya sabiendo de qué es ---------- */
+  // Van todos, sin marcar cuáles traía: que elija de nuevo, no que confirme.
+  function pintarFinalista() {
+    $('proyecto').textContent = PROYECTO;
+    var c = $('finalista');
+    c.innerHTML = '';
+    vitrina.forEach(function (n) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'opcion' + (st.finalista === n ? ' sel' : '');
+      b.textContent = n;
+      b.setAttribute('aria-pressed', st.finalista === n ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        st.finalista = (st.finalista === n) ? '' : n;   // tocarlo otra vez lo quita
+        guardar();
+        pintarFinalista();
+        refrescar();
+      });
+      c.appendChild(b);
+    });
+
+    // El porqué vale más cuando cambió de opinión: ahí se lo pregunto directo.
+    var cambio = st.finalista && st.finalista !== st.elegidos[0];
+    $('finalista-etiqueta').firstChild.nodeValue =
+      cambio ? '¿Qué te hizo cambiar? ' : '¿Por qué ese? ';
+    $('finalista-porque').value = st.finalistaPorque;
+  }
+
+  function notaFinalista() {
+    var pos = st.elegidos.indexOf(st.finalista);
+    var rel = pos === 0 ? 'El mismo que tu #1'
+            : pos > 0   ? 'Antes lo tenías en tu lugar ' + (pos + 1)
+                        : 'No estaba en tu podio';
+    return st.finalistaPorque ? rel + ' · ' + st.finalistaPorque : rel;
+  }
+
+  /* ---------- 7 · resumen ---------- */
   function pintarResumen(destino, conEditar) {
     var c = $(destino);
     c.innerHTML = '';
@@ -1011,23 +1100,19 @@ function insignia(p) {
       med.appendChild(d);
 
       f.appendChild(num); f.appendChild(med);
-
-      if (conEditar) {
-        var e = document.createElement('button');
-        e.type = 'button'; e.className = 'editar'; e.textContent = 'Editar';
-        e.addEventListener('click', function () { st.idx = p; ir(4); });
-        f.appendChild(e);
-      }
       c.appendChild(f);
     });
 
     // Lo demás que va en el envío, para que nada viaje a ciegas.
-    if (st.peor) c.appendChild(filaExtra('Descartas', st.peor, st.peorPorque, conEditar ? 3 : 0));
-    // Sin "Editar": aquí ya se ve el podio completo, corregirla sería copiar.
+    // Lo contestado a ciegas ya no lleva "Editar": después de saber de qué es el
+    // proyecto dejaría de ser la primera impresión. Solo el finalista se corrige.
+    if (st.peor) c.appendChild(filaExtra('Descartas', st.peor, st.peorPorque, 0));
     if (st.memoria) c.appendChild(filaExtra('De memoria', st.memoria,
       st.memoria.toLowerCase() === (st.elegidos[0] || '').toLowerCase()
         ? 'Coincide con tu #1' : 'Tu #1 es ' + st.elegidos[0],
       0));
+    if (st.finalista) c.appendChild(filaExtra('Ya sabiendo de qué es', st.finalista,
+      notaFinalista(), conEditar ? REVELA : 0));
   }
 
   function filaExtra(etiqueta, valor, nota, pasoEditar) {
@@ -1110,10 +1195,12 @@ function insignia(p) {
   }
 
   /* ---------- navegación ---------- */
-  var PASOS = 6;                       // pantallas antes del "gracias"
+  var PASOS = 7;                       // pantallas antes del "gracias"
+  var REVELA = 6;                      // de aquí en adelante ya saben de qué es
   var TITULOS = { 1: 'Escoge tus favoritos', 2: 'Arma tu podio',
                   3: 'El que descartarías', 4: '¿Qué te suena que vende?',
-                  5: 'De memoria', 6: 'Revisa y manda', 7: 'Listo' };
+                  5: 'De memoria', 6: 'Ahora sí te cuento',
+                  7: 'Revisa y manda', 8: 'Listo' };
 
   // La memoria se contesta una sola vez. Si después cambia su #1, la pregunta
   // ya es otra y se vuelve a hacer.
@@ -1122,7 +1209,7 @@ function insignia(p) {
   }
 
   function ir(p) {
-    if (p === 5 && memoriaCerrada()) p = 6;
+    if (p === 5 && memoriaCerrada()) p = REVELA;
     if (p === 5 && st.memoriaDe) { st.memoria = ''; st.memoriaDe = ''; guardar(); }
     st.paso = p;
     for (var k = 1; k <= PASOS; k++) $('p' + k).hidden = (k !== p);
@@ -1133,7 +1220,12 @@ function insignia(p) {
     if (p === 3) pintarDescartar();
     if (p === 4) pintarFicha();
     if (p === 5) $('memoria').value = st.memoria;
-    if (p === 6) {
+    if (p === REVELA) {
+      // Punto sin regreso: se guarda para que recargar no reabra lo de antes.
+      if (!st.revelado) { st.revelado = true; guardar(); }
+      pintarFinalista();
+    }
+    if (p === 7) {
       pintarResumen('resumen', true);
       $('quien').value = st.quien;
       $('correo').value = st.correo;
@@ -1169,7 +1261,7 @@ function insignia(p) {
     }
     $('cuenta').textContent = cuenta;
 
-    $('atras').hidden = (p === 1 || p === PASOS + 1);
+    $('atras').hidden = (p === 1 || p === REVELA || p === PASOS + 1);
     $('pie').hidden = (p === PASOS + 1);
     $('nota').textContent = '';
 
@@ -1189,7 +1281,10 @@ function insignia(p) {
     } else if (p === 5) {
       seguir.textContent = 'Continuar';
       seguir.disabled = false;
-    } else if (p === 6) {
+    } else if (p === REVELA) {
+      seguir.textContent = 'Continuar';
+      seguir.disabled = !st.finalista;
+    } else if (p === 7) {
       seguir.textContent = 'Enviar';
       seguir.disabled = false;
     }
@@ -1252,11 +1347,22 @@ function insignia(p) {
       }
       st.memoriaDe = st.elegidos[0];
       guardar();
-      ir(6);
+      ir(REVELA);
       return;
     }
 
-    if (p === 6) {
+    if (p === REVELA) {
+      if (!st.finalista) {
+        $('nota').textContent = 'Escoge uno, aunque sea el mismo de antes.';
+        return;
+      }
+      st.finalistaPorque = $('finalista-porque').value.trim();
+      guardar();
+      ir(7);
+      return;
+    }
+
+    if (p === 7) {
       st.quien = $('quien').value.trim();
       st.correo = $('correo').value.trim();
       st.libre = $('libre').value.trim();
@@ -1298,10 +1404,7 @@ function insignia(p) {
       return;
     }
     if (p === 5) { st.idx = TOP - 1; ir(4); return; }
-    if (p === 6) {
-      if (memoriaCerrada()) { st.idx = TOP - 1; ir(4); }
-      else ir(5);
-    }
+    if (p === 7) ir(REVELA);          // del 6 no hay regreso: ya vio de qué es
   });
 
   ['quien', 'correo', 'libre', 'memoria'].forEach(function (id) {
@@ -1315,6 +1418,11 @@ function insignia(p) {
   $('peor-porque').addEventListener('input', function () {
     st.peorPorque = this.value;
     $('nota').textContent = '';
+    guardar();
+  });
+
+  $('finalista-porque').addEventListener('input', function () {
+    st.finalistaPorque = this.value;
     guardar();
   });
 
@@ -1403,6 +1511,8 @@ function insignia(p) {
         peor: st.peor,
         peorPorque: st.peorPorque,
         memoria: st.memoria,
+        finalista: st.finalista,
+        finalistaPorque: st.finalistaPorque,
         libre: st.libre,
         ocupacion: st.ocupacion,
         ocupacionDetalle: st.ocupacionDetalle,
@@ -1435,9 +1545,12 @@ function insignia(p) {
     .then(function (cfg) {
       NOMBRES = cfg.candidatos; TOP = cfg.top; OBLIG = cfg.obligatorias;
       OCUP = cfg.ocupaciones || [];
+      PROYECTO = cfg.proyecto || '';
       barajar();
       recuperar();
-      ir(1);
+      // Quien ya vio de qué es el proyecto regresa ahí, no al principio.
+      var yaVio = st.revelado && st.elegidos.length === TOP && st.peor && st.memoria;
+      ir(yaVio ? REVELA : 1);
     })
     .catch(function () {
       $('rejilla').innerHTML =
@@ -1539,6 +1652,7 @@ function insignia(p) {
     $('bloqueDescartes').hidden = true;
     $('bloqueMemoria').hidden = true;
     $('bloqueLibres').hidden = true;
+    $('bloqueFinal').hidden = true;
     $('memoriaCorrectos').hidden = true;
 
     // El mismo permiso que abrió esta página sirve para bajar el archivo.
@@ -1610,6 +1724,20 @@ function insignia(p) {
       ideas.push('<li>Atención con <b>' + esc(masDescartado.nombre) + '</b>: concentra ' +
         plural(masDescartado.descartes, 'descarte', 'descartes') + '.</li>');
     }
+    // Segunda vuelta: el nombre que eligen ya sabiendo de qué es el proyecto.
+    var fin = R.final || { contestaron: 0, mismos: 0, cambios: [] };
+    var conVotos = tabla.filter(function (t) { return t.finalistas; })
+      .sort(function (x, y) { return y.finalistas - x.finalistas; });
+    var favFinal = conVotos[0] || null;
+    if (fin.contestaron && favFinal) {
+      ideas.push('<li>Ya sabiendo de qué es: <b>' + esc(favFinal.nombre) + '</b> se lleva ' +
+        favFinal.finalistas + ' de ' + plural(fin.contestaron, 'voto', 'votos') + '; ' +
+        plural(fin.cambios.length, 'persona cambió', 'personas cambiaron') + ' de favorito.</li>');
+      if (ganador && favFinal.nombre !== ganador.nombre) {
+        ideas.push('<li>Ojo: a ciegas gana <b>' + esc(ganador.nombre) + '</b>, pero con contexto gana <b>' +
+          esc(favFinal.nombre) + '</b>.</li>');
+      }
+    }
     if (!activas && total) {
       ideas.push('<li>Todas las respuestas están excluidas. Restaura alguna para volver a calcular resultados.</li>');
     }
@@ -1629,11 +1757,60 @@ function insignia(p) {
           Math.max(2, Math.round((t.promedio / tope) * 110)) + 'px"></div></td>' +
         '<td class="num">' + t.cobertura + '%</td>' +
         '<td class="num">' + t.primeros + '</td>' +
+        '<td class="num">' + (t.finalistas || '—') + '</td>' +
         '<td class="num">' + (t.posMedia === null ? '—' : t.posMedia.toFixed(1)) + '</td>' +
         '<td class="num' + (t.descartes ? ' malo' : '') + '">' + (t.descartes || '—') + '</td>' +
         '<td class="num">' + (typeof t.vistos === 'number' ? t.vistos : '—') + '</td>';
       tb.appendChild(tr);
     });
+
+    if (fin.contestaron) {
+      $('bloqueFinal').hidden = false;
+      $('finalNota').textContent =
+        'Después de la prueba de memoria se les dice de qué es el proyecto y eligen un solo nombre ' +
+        'entre todos. ' + (fin.contestaron < activas
+          ? 'Contestaron esta parte ' + fin.contestaron + ' de ' + activas +
+            ' respuestas; las demás llegaron antes de que existiera.'
+          : 'La contestaron todas las respuestas.') +
+        ' Los nombres que dicen lo que hace el producto suelen ganar aquí: tómalo como una señal más.';
+
+      var fr = limpiar('finalResumen');
+      var tasaMismo = fin.mismos / fin.contestaron;
+      fr.appendChild(kpi('Finalista', favFinal ? favFinal.nombre : 'Sin datos',
+        favFinal ? favFinal.finalistas + ' de ' + plural(fin.contestaron, 'voto', 'votos') : '', 'fuerte'));
+      fr.appendChild(kpi('Se quedó con su #1', pct(tasaMismo), fin.mismos + ' de ' + fin.contestaron));
+      fr.appendChild(kpi('Cambió', String(fin.cambios.length),
+        plural(fin.cambios.filter(function (c) { return !c.lugar; }).length,
+               'eligió', 'eligieron') + ' algo fuera de su podio',
+        fin.cambios.length ? 'alerta' : ''));
+
+      var donde = function (lugar) {
+        return lugar === 1 ? 'era su #1' : lugar ? 'lo tenía en lugar ' + lugar : 'no estaba en su podio';
+      };
+      var fg = limpiar('finalGrupos');
+      conVotos.forEach(function (t, i) {
+        var g = grupo(t.nombre, plural(t.finalistas, 'voto', 'votos'), i === 0);
+        var body = g.querySelector('.grupo-body');
+        t.razones.forEach(function (z) {
+          body.appendChild(frase(z.texto ? esc(z.texto) : '<i>Sin razón</i>',
+                                 z.quien + ' · ' + donde(z.lugar), false));
+        });
+        fg.appendChild(g);
+      });
+
+      var fc = limpiar('finalCambios');
+      if (fin.cambios.length) {
+        var gc = grupo('Cambiaron de favorito', plural(fin.cambios.length, 'caso', 'casos'), true);
+        var bc = gc.querySelector('.grupo-body');
+        fin.cambios.forEach(function (c) {
+          bc.appendChild(frase(
+            'De <b>' + esc(c.de || '—') + '</b> a <b>' + esc(c.a) + '</b>' +
+              (c.texto ? ': ' + esc(c.texto) : ''),
+            c.quien + ' · ' + donde(c.lugar), false));
+        });
+        fc.appendChild(gc);
+      }
+    }
 
     var cf = limpiar('frases');
     tabla.forEach(function (t) {
@@ -1808,6 +1985,17 @@ function insignia(p) {
             : '<span class="mal">Falló</span> · su #1 es ' + esc(orden[0] || '—')) + '</span>';
         mem.appendChild(dm);
         card.appendChild(mem);
+      }
+
+      if (r.finalista) {
+        var fin = seccion('Ya sabiendo de qué es');
+        var antes = orden.map(function (n) { return String(n).toLowerCase(); })
+                         .indexOf(String(r.finalista).toLowerCase());
+        var rel = antes === 0 ? 'El mismo que su #1'
+                : antes > 0   ? 'Antes lo tenía en lugar ' + (antes + 1)
+                              : 'No estaba en su podio';
+        fin.appendChild(dato(r.finalista, rel + (r.finalistaPorque ? ' · ' + r.finalistaPorque : ''), ''));
+        card.appendChild(fin);
       }
 
       if (r.libre) {

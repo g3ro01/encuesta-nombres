@@ -40,6 +40,11 @@ const OCUPACIONES = [
 ];
 const nombreOcupacion = id => (OCUPACIONES.find(o => o.id === id) || {}).nombre || '';
 
+// Lo que se le cuenta a la persona DESPUÉS de opinar a ciegas, justo antes de
+// pedirle un solo finalista. Corto y neutro: describe, no vende.
+const PROYECTO = 'Es una app para que un negocio pequeño lleve sus ventas, ' +
+                 'su inventario y sus gastos.';
+
 const TOP = 5;                      // cuántos lugares pide
 const OBLIGATORIAS = 3;             // cuántas explicaciones son obligatorias
 const CLAVE = process.env.CLAVE_RESULTADOS || 'cambiame';
@@ -87,6 +92,10 @@ async function prepararBase() {
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS ocupacion_detalle TEXT');
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS acepta_info BOOLEAN NOT NULL DEFAULT FALSE');
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS vistos JSONB');
+  // El finalista que eligen ya sabiendo de qué es el proyecto. Vacío en las
+  // respuestas que llegaron antes de que existiera ese paso.
+  await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS finalista TEXT');
+  await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS finalista_porque TEXT');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS candidatos (
@@ -114,11 +123,12 @@ async function guardar(fila) {
   }
   await pool.query(
     'INSERT INTO respuestas (quien, correo, orden, porque, peor, peor_porque, memoria, libre, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos) ' +
-    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque) ' +
+    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)',
     [fila.quien, fila.correo, JSON.stringify(fila.orden), JSON.stringify(fila.porque),
      fila.peor, fila.peorPorque, fila.memoria, fila.libre,
-     fila.ocupacion, fila.ocupacionDetalle, fila.aceptaInfo, JSON.stringify(fila.vistos)]
+     fila.ocupacion, fila.ocupacionDetalle, fila.aceptaInfo, JSON.stringify(fila.vistos),
+     fila.finalista, fila.finalistaPorque]
   );
 }
 
@@ -126,7 +136,7 @@ async function leerTodas() {
   if (!pool) return memoria;
   const r = await pool.query(
     'SELECT id, quien, correo, orden, porque, peor, peor_porque, memoria, libre, creado, excluida, excluida_en, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos ' +
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque ' +
     'FROM respuestas ORDER BY id');
   // La base usa snake_case; el resto del código habla camelCase.
   r.rows.forEach(f => {
@@ -135,6 +145,7 @@ async function leerTodas() {
     f.excluidaEn = f.excluida_en;
     f.ocupacionDetalle = f.ocupacion_detalle;
     f.aceptaInfo = !!f.acepta_info;
+    f.finalistaPorque = f.finalista_porque;
   });
   return r.rows;
 }
@@ -234,8 +245,12 @@ function calcular(filas, candidatos) {
   const acc = {};
   candidatos.forEach(c => {
     acc[c.nombre] = { nombre: c.nombre, activo: c.activo, vistos: 0, puntos: 0, menciones: 0,
-                      primeros: 0, sumaPos: 0, frases: [], descartes: 0, quejas: [] };
+                      primeros: 0, sumaPos: 0, frases: [], descartes: 0, quejas: [],
+                      finalistas: 0, razones: [] };
   });
+
+  // Segunda vuelta: el único nombre que eligen ya sabiendo de qué es el proyecto.
+  const final = { contestaron: 0, mismos: 0, cambios: [] };
 
   const libres = [];
   const memoria = [];
@@ -282,6 +297,18 @@ function calcular(filas, candidatos) {
       });
     }
 
+    // lugar = dónde tenía ese nombre a ciegas (0: no estaba en su podio).
+    const fin = canon(f.finalista);
+    if (fin && acc[fin]) {
+      const lugar = orden.map(canon).indexOf(fin) + 1;
+      const razon = String(f.finalistaPorque || '').trim();
+      acc[fin].finalistas += 1;
+      acc[fin].razones.push({ quien, texto: razon, lugar });
+      final.contestaron += 1;
+      if (lugar === 1) final.mismos += 1;
+      else final.cambios.push({ quien, de: canon(orden[0]) || orden[0] || '', a: fin, lugar, texto: razon });
+    }
+
     const libre = (f.libre || '').trim();
     if (libre) libres.push({ quien, texto: libre });
   });
@@ -302,13 +329,15 @@ function calcular(filas, candidatos) {
       posMedia: a.menciones ? Math.round((a.sumaPos / a.menciones) * 10) / 10 : null,
       frases: a.frases,
       descartes: a.descartes,
-      quejas: a.quejas
+      quejas: a.quejas,
+      finalistas: a.finalistas,
+      razones: a.razones
     };
   }).sort((x, y) => y.promedio - x.promedio || y.puntos - x.puntos || y.menciones - x.menciones);
 
   const aciertos = memoria.filter(m => m.acierto).length;
   return {
-    respuestas: filas.length, top: TOP, tabla, libres,
+    respuestas: filas.length, top: TOP, tabla, libres, final,
     memoria: {
       intentos: memoria.length,
       aciertos,
@@ -331,6 +360,8 @@ function respuestaPublica(f) {
     peor: f.peor || '',
     peorPorque: f.peorPorque || '',
     memoria: f.memoria || '',
+    finalista: f.finalista || '',
+    finalistaPorque: f.finalistaPorque || '',
     libre: f.libre || '',
     ocupacion: f.ocupacion || '',
     ocupacionNombre: nombreOcupacion(f.ocupacion),
@@ -353,7 +384,8 @@ app.get('/resultados', pagina);
 app.get('/api/config', async (_req, res) => {
   try {
     const candidatos = (await leerCandidatos()).filter(c => c.activo).map(c => c.nombre);
-    res.json({ candidatos, top: TOP, obligatorias: OBLIGATORIAS, ocupaciones: OCUPACIONES });
+    res.json({ candidatos, top: TOP, obligatorias: OBLIGATORIAS, ocupaciones: OCUPACIONES,
+               proyecto: PROYECTO });
   } catch (err) {
     console.error('[error] al leer candidatos:', err.message);
     res.status(500).json({ error: 'No se pudo cargar la lista.' });
@@ -410,6 +442,13 @@ app.post('/api/respuesta', async (req, res) => {
       return res.status(400).json({ error: 'El descartado no está en la lista.' });
     }
 
+    // Opcional para el servidor: quien tenía la encuesta abierta desde antes de
+    // este paso manda sin finalista, y su respuesta sigue valiendo.
+    const finalista = String(b.finalista || '').trim();
+    if (finalista && !canon(finalista)) {
+      return res.status(400).json({ error: 'El finalista no está en la lista.' });
+    }
+
     const ocupacion = String(b.ocupacion || '').trim();
     if (ocupacion && !OCUPACIONES.some(o => o.id === ocupacion)) {
       return res.status(400).json({ error: 'Esa ocupación no está en la lista.' });
@@ -432,6 +471,8 @@ app.post('/api/respuesta', async (req, res) => {
       peor,
       peorPorque: String(b.peorPorque || '').trim().slice(0, 400),
       memoria: String(b.memoria || '').trim().slice(0, 80),
+      finalista,
+      finalistaPorque: finalista ? String(b.finalistaPorque || '').trim().slice(0, 400) : '',
       libre: String(b.libre || '').trim().slice(0, 600),
       ocupacion,
       ocupacionDetalle: String(b.ocupacionDetalle || '').trim().slice(0, 160),
@@ -596,6 +637,7 @@ app.get('/api/csv', async (req, res) => {
   cab.push('descarta', 'por_que_descarta', 'escribio_de_memoria', 'acerto', 'libre');
   // Al final, para no mover las columnas de quien ya importaba el CSV.
   cab.push('ocupacion', 'a_que_se_dedica', 'acepta_info');
+  cab.push('finalista', 'por_que_finalista', 'finalista_era_su_1');
 
   const lineas = [cab.join(',')];
   filas.forEach(f => {
@@ -611,6 +653,11 @@ app.get('/api/csv', async (req, res) => {
                 : '');
     fila.push(f.libre || '');
     fila.push(nombreOcupacion(f.ocupacion), f.ocupacionDetalle || '', f.aceptaInfo ? 'sí' : 'no');
+    const fin = String(f.finalista || '').trim();
+    fila.push(fin, f.finalistaPorque || '',
+              fin && orden[0]
+                ? (fin.toLowerCase() === String(orden[0]).toLowerCase() ? 'sí' : 'no')
+                : '');
     lineas.push(fila.map(celda).join(','));
   });
 
