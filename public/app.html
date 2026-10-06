@@ -31,6 +31,14 @@
   --oro:#FFC82E; --oro-borde:#B07A00; --oro-ink:#2E1C00;
   --azul:#2D6BE0; --azul-borde:#1A48A6; --azul-ink:#FFFFFF;
   --lila:#C8A8F2; --lila-borde:#7C56BE; --lila-ink:#24103F;
+  /* Segunda parte (desde que se revela el proyecto): otro mundo de color para
+     que se note que ya no es lo mismo. Neutros hacia el índigo, tarjeta de
+     noche y el oro del #1 como relleno: verde = a ciegas, oro = finalista. */
+  --p2-ground:#E8E8F4; --p2-surface:#FCFCFF; --p2-surface-2:#DADAEC;
+  --p2-line:#B9B9D3; --p2-line-soft:#D3D3E6;
+  --p2-ink:#15152B; --p2-ink-2:#37375A; --p2-muted:#5A5A7C;
+  --p2-acento:#3B36B8; --p2-tinte:#DCDBF7;
+  --p2-carta:#26226E; --p2-carta-ink:#FFFFFF; --p2-carta-ink-2:#D9D8F5;
   --shadow:0 1px 0 rgba(18,24,23,.04), 0 10px 26px -20px rgba(18,24,23,.55);
   --lift:0 2px 0 rgba(18,24,23,.06), 0 14px 32px -22px rgba(18,24,23,.65);
 }
@@ -44,6 +52,11 @@
     --calido:#F2B23C;
     --ok:#3EE3C0; --ok-bg:#0E332B;
     --alerta:#FF8367;
+    --p2-ground:#12121C; --p2-surface:#1B1B29; --p2-surface-2:#262638;
+    --p2-line:#3A3A55; --p2-line-soft:#2C2C42;
+    --p2-ink:#ECECF7; --p2-ink-2:#C4C4DB; --p2-muted:#9090AE;
+    --p2-acento:#A9A4FF; --p2-tinte:#201F45;
+    --p2-carta:#322DA0; --p2-carta-ink:#FFFFFF; --p2-carta-ink-2:#D9D8F5;
     --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 30px -22px #000;
     --lift:0 2px 0 rgba(0,0,0,.35), 0 16px 36px -24px #000;
   }
@@ -57,6 +70,11 @@
   --calido:#F2B23C;
   --ok:#3EE3C0; --ok-bg:#0E332B;
   --alerta:#FF8367;
+  --p2-ground:#12121C; --p2-surface:#1B1B29; --p2-surface-2:#262638;
+  --p2-line:#3A3A55; --p2-line-soft:#2C2C42;
+  --p2-ink:#ECECF7; --p2-ink-2:#C4C4DB; --p2-muted:#9090AE;
+  --p2-acento:#A9A4FF; --p2-tinte:#201F45;
+  --p2-carta:#322DA0; --p2-carta-ink:#FFFFFF; --p2-carta-ink-2:#D9D8F5;
   --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 30px -22px #000;
   --lift:0 2px 0 rgba(0,0,0,.35), 0 16px 36px -24px #000;
 }
@@ -348,22 +366,44 @@ div.campo{margin-bottom:14px}
   font-size:13.5px;color:var(--muted);
 }
 
+/* ---------- segunda parte: del paso 6 en adelante ---------- */
+/* Los componentes no cambian: solo se les cambian las fichas de color. */
+body{transition:background-color .45s ease}
+body.parte2{
+  --ground:var(--p2-ground); --surface:var(--p2-surface); --surface-2:var(--p2-surface-2);
+  --line:var(--p2-line); --line-soft:var(--p2-line-soft);
+  --ink:var(--p2-ink); --ink-2:var(--p2-ink-2); --muted:var(--p2-muted);
+  --accent:var(--oro); --accent-ink:var(--oro-ink);
+  --accent-texto:var(--p2-acento);
+  --ok:var(--p2-acento); --ok-bg:var(--p2-tinte);
+}
+/* El oro es claro: sin borde se pierde contra la tarjeta blanca. */
+body.parte2 .opcion.sel,
+body.parte2 .chip.sel{border-color:var(--oro-borde)}
+body.parte2 .btn:not(.atras){box-shadow:inset 0 0 0 1px var(--oro-borde)}
+
 /* ---------- 6 · revelar el proyecto y elegir finalista ---------- */
 .revela{
-  background:var(--ok-bg);border:1px solid var(--ok);border-radius:14px;
-  padding:18px 20px 20px;margin-bottom:24px;
+  background:var(--p2-carta);color:var(--p2-carta-ink);border-radius:14px;
+  padding:20px 20px 22px;margin-bottom:26px;box-shadow:var(--lift);
+  animation:revelar .45s cubic-bezier(.2,.7,.3,1) both;
+}
+@keyframes revelar{from{opacity:.35;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  body{transition:none}
+  .revela{animation:none}
 }
 .revela .lugar{
-  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);
   font-weight:700;margin:0 0 8px;
 }
 .revela .que{
   font-family:"Newsreader",Georgia,serif;font-weight:500;
   font-size:clamp(20px,5.4vw,24px);line-height:1.3;margin:0;
-  color:var(--ink);letter-spacing:-.01em;text-wrap:pretty;
+  color:var(--p2-carta-ink);letter-spacing:-.01em;text-wrap:pretty;
 }
 .revela .mas{
-  font-size:15.5px;line-height:1.5;margin:10px 0 0;color:var(--ink-2);text-wrap:pretty;
+  font-size:15.5px;line-height:1.5;margin:10px 0 0;color:var(--p2-carta-ink-2);text-wrap:pretty;
 }
 .pregunta-final{
   font-family:"Newsreader",Georgia,serif;font-weight:600;
@@ -1223,6 +1263,8 @@ function insignia(p) {
     if (p === 5 && memoriaCerrada()) p = REVELA;
     if (p === 5 && st.memoriaDe) { st.memoria = ''; st.memoriaDe = ''; guardar(); }
     st.paso = p;
+    // Desde la revelación la encuesta cambia de color: es otra parte.
+    document.body.classList.toggle('parte2', p >= REVELA);
     for (var k = 1; k <= PASOS; k++) $('p' + k).hidden = (k !== p);
     $('pf').hidden = (p !== PASOS + 1);
 

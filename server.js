@@ -46,9 +46,10 @@ const nombreOcupacion = id => (OCUPACIONES.find(o => o.id === id) || {}).nombre 
 const PROYECTO = [
   'Es una app para administrar un negocio pequeño o mediano, de cualquier giro: ' +
   'una tienda, una cafetería, una estética, un taller.',
-  'Sirve para cobrar y registrar las ventas, llevar el inventario, las compras y ' +
-  'los gastos, y hacer el corte de caja. El dueño ve desde su celular o su ' +
-  'computadora cómo va el negocio: cuánto vendió, cuánto gastó y cuánto le quedó.'
+  'Sirve para cobrar en efectivo o con tarjeta y registrar cada venta, llevar el ' +
+  'inventario, las compras y los gastos, y hacer el corte de caja. El dueño ve ' +
+  'desde su celular o su computadora cómo va el negocio: cuánto vendió, cuánto ' +
+  'gastó y cuánto le quedó.'
 ];
 
 const TOP = 5;                      // cuántos lugares pide
