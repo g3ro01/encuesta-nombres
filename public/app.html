@@ -835,6 +835,12 @@ td.num.malo{color:var(--alerta);font-weight:700}
 <script>
 /* --- insignia de lugar: #1 estrella de oro, #2 azul, #3 lila, los demás solo texto.
    La comparten la encuesta y los resultados. --- */
+// Para la prueba de memoria: sin acentos ni mayúsculas. La comparten la encuesta
+// y los resultados.
+function llano(v) {
+  return String(v || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 var MEDALLA = ['oro', 'azul', 'lila'];
 var ESTRELLA = '<svg viewBox="-12 -12 24 24" aria-hidden="true"><path d="M0 -11L3.88 -5.34' +
   'L10.46 -3.4L6.28 2.04L6.47 8.9L0 6.6L-6.47 8.9L-6.28 2.04L-10.46 -3.4L-3.88 -5.34Z"/></svg>';
@@ -1184,7 +1190,7 @@ function insignia(p) {
     // proyecto dejaría de ser la primera impresión. Solo el finalista se corrige.
     if (st.peor) c.appendChild(filaExtra('Descartas', st.peor, st.peorPorque, 0));
     if (st.memoria) c.appendChild(filaExtra('De memoria', st.memoria,
-      st.memoria.toLowerCase() === (st.elegidos[0] || '').toLowerCase()
+      llano(st.memoria) === llano(st.elegidos[0])
         ? 'Coincide con tu #1' : 'Tu #1 es ' + st.elegidos[0],
       0));
     if (st.finalista) c.appendChild(filaExtra('Ya sabiendo de qué es', st.finalista,
@@ -2077,7 +2083,7 @@ function insignia(p) {
       if (r.memoria) {
         var mem = seccion('De memoria');
         var memoriaOk = orden[0] &&
-          String(r.memoria).trim().toLowerCase() === String(orden[0]).toLowerCase();
+          llano(r.memoria) === llano(orden[0]);
         var dm = document.createElement('div');
         dm.innerHTML = '<span class="nm">' + esc(r.memoria) + '</span>' +
           '<span class="dc">' + (memoriaOk

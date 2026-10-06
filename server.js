@@ -236,6 +236,10 @@ function mapaNombres(candidatos) {
   return n => m.get(String(n || '').trim().toLowerCase()) || null;
 }
 
+// Para la prueba de memoria: sin acentos ni mayúsculas. Quien escribe «Kavixi»
+// por «Kávixi» sí se acordó del nombre; en el celular casi nadie pone acentos.
+const llano = v => String(v || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
 const NOMBRE_OK = /^\p{L}[\p{L}\p{M}' -]{1,29}$/u;
 const limpiarNombre = v => String(v || '').trim().replace(/\s+/g, ' ');
 
@@ -303,7 +307,7 @@ function calcular(filas, candidatos) {
         quien,
         objetivo: orden[0],
         escrito,
-        acierto: escrito.toLowerCase() === orden[0].toLowerCase()
+        acierto: llano(escrito) === llano(orden[0])
       });
     }
 
@@ -664,7 +668,7 @@ app.get('/api/csv', async (req, res) => {
     const escrito = String(f.memoria || '').trim();
     fila.push(f.peor || '', f.peorPorque || '', escrito,
               escrito && orden[0]
-                ? (escrito.toLowerCase() === String(orden[0]).toLowerCase() ? 'sí' : 'no')
+                ? (llano(escrito) === llano(orden[0]) ? 'sí' : 'no')
                 : '');
     fila.push(f.libre || '');
     fila.push(nombreOcupacion(f.ocupacion), f.ocupacionDetalle || '', f.aceptaInfo ? 'sí' : 'no');
