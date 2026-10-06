@@ -107,7 +107,7 @@ body{
 }
 .der{display:flex;align-items:center;gap:9px;flex:0 0 auto}
 .rotulo .cuenta{
-  font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;
+  font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 .tema{
   width:36px;height:36px;flex:0 0 36px;border-radius:10px;
@@ -201,7 +201,7 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
 .asa:active,.rank.arrastrando .asa{cursor:grabbing;color:var(--accent-texto)}
 .asa svg{pointer-events:none;display:block}
 .pista{
-  font-size:12.5px;color:var(--muted);text-align:center;margin:14px 0 0;
+  font-size:13.5px;color:var(--muted);text-align:center;margin:14px 0 0;
 }
 
 /* ---------- 3 · describir ---------- */
@@ -217,7 +217,7 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
   padding:24px 20px;box-shadow:var(--lift);text-align:center;
 }
 .ficha .lugar{
-  font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
   font-weight:700;margin:0 0 10px;
   display:flex;align-items:center;justify-content:center;gap:8px;
 }
@@ -226,14 +226,17 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
   font-family:"Newsreader",Georgia,serif;font-weight:600;
   font-size:clamp(32px,9vw,44px);line-height:1;margin:0 0 4px;letter-spacing:-.02em;
 }
-.ficha .pregunta{color:var(--ink-2);font-size:15.5px;margin:0 0 18px}
+/* La pregunta va en la letra de texto y en negrita, igual que en la segunda
+   parte; los remates se quedan para el nombre. */
+.ficha .pregunta{color:var(--ink);font-size:17px;font-weight:700;line-height:1.35;
+  margin:10px 0 18px;text-wrap:balance}
 .ficha textarea{
   width:100%;min-height:110px;resize:vertical;text-align:left;
   font-family:inherit;font-size:16px;line-height:1.5;color:var(--ink);
   background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:13px 14px;
 }
 .ficha textarea:focus{outline:2px solid var(--accent-texto);outline-offset:1px;border-color:var(--accent-texto)}
-.opcional{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.opcional{font-size:13.5px;color:var(--muted);margin:10px 0 0}
 .saltar{
   background:none;border:0;color:var(--muted);font-family:inherit;font-size:14px;
   text-decoration:underline;cursor:pointer;padding:8px;margin-top:6px;
@@ -264,11 +267,11 @@ main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
 }
 .memoria .icono-mem{color:var(--muted);margin-bottom:10px}
 .memoria h2{
-  font-family:"Newsreader",Georgia,serif;font-weight:600;
-  font-size:clamp(22px,6vw,28px);line-height:1.15;margin:0 0 8px;letter-spacing:-.01em;
+  font-family:inherit;font-weight:700;
+  font-size:20px;line-height:1.3;margin:0 0 10px;text-wrap:balance;
 }
-.memoria h2 .rango{--t:24px;margin:-4px -3px 0 0}
-.memoria p{color:var(--ink-2);font-size:15px;margin:0 0 20px}
+.memoria h2 .rango{--t:23px;margin:-3px -2px 0 0}
+.memoria p{color:var(--ink-2);font-size:15.5px;margin:0 0 20px}
 .memoria input{
   text-align:center;font-family:"Newsreader",Georgia,serif;
   font-size:26px;font-weight:600;letter-spacing:-.01em;padding:14px;
@@ -347,7 +350,7 @@ div.campo{margin-bottom:14px}
 }
 .btn.atras:hover{color:var(--ink);border-color:var(--ink-2)}
 .nota{
-  text-align:center;font-size:12.5px;color:var(--alerta);
+  text-align:center;font-size:14px;color:var(--alerta);
   margin:9px 0 0;min-height:18px;
 }
 
@@ -586,22 +589,23 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
     <!-- 1 · elegir -->
     <section class="pantalla" id="p1">
-      <p class="ayuda">Escoge los que te laten, en el orden que te gusten.
-        Si quieres deseleccionar uno, sólo tócalo otra vez.</p>
+      <h2 class="pregunta-final">¿Cuáles <span id="cuantos">5</span> nombres te laten más?</h2>
+      <p class="ayuda">Tócalos empezando por tu favorito. Si quieres quitar uno, sólo tócalo otra vez.</p>
       <div class="rejilla" id="rejilla"></div>
     </section>
 
     <!-- 2 · ordenar -->
     <section class="pantalla" id="p2" hidden>
-      <p class="ayuda">Este es tu podio. Si quieres reacomodarlos sólo arrastra desde las rayitas.</p>
+      <h2 class="pregunta-final">Este es tu podio. ¿Así lo dejas?</h2>
+      <p class="ayuda">Si quieres reacomodarlos, sólo arrastra desde las rayitas.</p>
       <div class="orden" id="orden"></div>
       <p class="pista">También puedes moverlos con las flechas del teclado.</p>
     </section>
 
     <!-- 3 · descartar -->
     <section class="pantalla" id="p3" hidden>
-      <p class="ayuda">De los que no escogiste, ¿cuál te gusta menos? Esto me sirve
-        tanto como los que te gustaron.</p>
+      <h2 class="pregunta-final">De los que no escogiste, ¿cuál te gusta menos?</h2>
+      <p class="ayuda">Esto me sirve tanto como saber cuáles te gustaron.</p>
       <div class="descartar" id="descartar"></div>
       <label class="campo">
         <span>¿Por qué ese?</span>
@@ -616,7 +620,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
       <div class="ficha">
         <p class="lugar" id="ficha-lugar"></p>
         <h2 id="ficha-nombre"></h2>
-        <p class="pregunta">Sin pensarlo mucho: ¿qué producto/servicio crees que vende o de qué crees que es el negocio?</p>
+        <p class="pregunta">Sin pensarlo mucho: ¿qué producto o servicio crees que vende, o de qué crees que es el negocio?</p>
         <textarea id="ficha-texto" placeholder="Por ejemplo: Una tiendita, una app de citas, un banco…"></textarea>
         <p class="opcional" id="ficha-opcional" hidden>Este puedes saltarlo si no se te ocurre nada.</p>
         <button class="saltar" id="saltar" hidden type="button">Saltar este</button>
@@ -1629,6 +1633,7 @@ function insignia(p) {
       NOMBRES = cfg.candidatos; TOP = cfg.top; OBLIG = cfg.obligatorias;
       OCUP = cfg.ocupaciones || [];
       PROYECTO = [].concat(cfg.proyecto || []);
+      $('cuantos').textContent = TOP;
       barajar();
       recuperar();
       // Quien ya vio de qué es el proyecto regresa ahí, no al principio.
