@@ -103,6 +103,8 @@ async function prepararBase() {
   // respuestas que llegaron antes de que existiera ese paso.
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS finalista TEXT');
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS finalista_porque TEXT');
+  // Otro nombre que se le ocurra a la persona. Opcional y sin filtro: son ideas.
+  await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS sugerencia TEXT');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS candidatos (
@@ -130,12 +132,12 @@ async function guardar(fila) {
   }
   await pool.query(
     'INSERT INTO respuestas (quien, correo, orden, porque, peor, peor_porque, memoria, libre, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque) ' +
-    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)',
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia) ' +
+    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)',
     [fila.quien, fila.correo, JSON.stringify(fila.orden), JSON.stringify(fila.porque),
      fila.peor, fila.peorPorque, fila.memoria, fila.libre,
      fila.ocupacion, fila.ocupacionDetalle, fila.aceptaInfo, JSON.stringify(fila.vistos),
-     fila.finalista, fila.finalistaPorque]
+     fila.finalista, fila.finalistaPorque, fila.sugerencia]
   );
 }
 
@@ -143,7 +145,7 @@ async function leerTodas() {
   if (!pool) return memoria;
   const r = await pool.query(
     'SELECT id, quien, correo, orden, porque, peor, peor_porque, memoria, libre, creado, excluida, excluida_en, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque ' +
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia ' +
     'FROM respuestas ORDER BY id');
   // La base usa snake_case; el resto del código habla camelCase.
   r.rows.forEach(f => {
@@ -258,6 +260,7 @@ function calcular(filas, candidatos) {
 
   // Segunda vuelta: el único nombre que eligen ya sabiendo de qué es el proyecto.
   const final = { contestaron: 0, mismos: 0, cambios: [] };
+  const sugerencias = [];
 
   const libres = [];
   const memoria = [];
@@ -318,6 +321,9 @@ function calcular(filas, candidatos) {
 
     const libre = (f.libre || '').trim();
     if (libre) libres.push({ quien, texto: libre });
+
+    const idea = String(f.sugerencia || '').trim();
+    if (idea) sugerencias.push({ quien, texto: idea });
   });
 
   const tabla = candidatos.map(c => {
@@ -344,7 +350,7 @@ function calcular(filas, candidatos) {
 
   const aciertos = memoria.filter(m => m.acierto).length;
   return {
-    respuestas: filas.length, top: TOP, tabla, libres, final,
+    respuestas: filas.length, top: TOP, tabla, libres, final, sugerencias,
     memoria: {
       intentos: memoria.length,
       aciertos,
@@ -369,6 +375,7 @@ function respuestaPublica(f) {
     memoria: f.memoria || '',
     finalista: f.finalista || '',
     finalistaPorque: f.finalistaPorque || '',
+    sugerencia: f.sugerencia || '',
     libre: f.libre || '',
     ocupacion: f.ocupacion || '',
     ocupacionNombre: nombreOcupacion(f.ocupacion),
@@ -480,6 +487,7 @@ app.post('/api/respuesta', async (req, res) => {
       memoria: String(b.memoria || '').trim().slice(0, 80),
       finalista,
       finalistaPorque: finalista ? String(b.finalistaPorque || '').trim().slice(0, 400) : '',
+      sugerencia: String(b.sugerencia || '').trim().replace(/\s+/g, ' ').slice(0, 60),
       libre: String(b.libre || '').trim().slice(0, 600),
       ocupacion,
       ocupacionDetalle: String(b.ocupacionDetalle || '').trim().slice(0, 160),
@@ -644,7 +652,7 @@ app.get('/api/csv', async (req, res) => {
   cab.push('descarta', 'por_que_descarta', 'escribio_de_memoria', 'acerto', 'libre');
   // Al final, para no mover las columnas de quien ya importaba el CSV.
   cab.push('ocupacion', 'a_que_se_dedica', 'acepta_info');
-  cab.push('finalista', 'por_que_finalista', 'finalista_era_su_1');
+  cab.push('finalista', 'por_que_finalista', 'finalista_era_su_1', 'sugiere_otro_nombre');
 
   const lineas = [cab.join(',')];
   filas.forEach(f => {
@@ -665,6 +673,7 @@ app.get('/api/csv', async (req, res) => {
               fin && orden[0]
                 ? (fin.toLowerCase() === String(orden[0]).toLowerCase() ? 'sí' : 'no')
                 : '');
+    fila.push(f.sugerencia || '');
     lineas.push(fila.map(celda).join(','));
   });
 

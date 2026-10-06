@@ -651,17 +651,25 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <textarea class="libre" id="finalista-porque" maxlength="400"
                   placeholder="Suena a lo que hace, se oye serio, se me queda…"></textarea>
       </label>
+      <label class="campo">
+        <span>¿Se te ocurre otro nombre? <em style="color:var(--muted)">(opcional)</em></span>
+        <input type="text" id="sugerencia" maxlength="60" autocomplete="off" autocapitalize="words"
+               spellcheck="false" placeholder="Solo para darme ideas">
+      </label>
     </section>
 
     <!-- 7 · firmar -->
     <section class="pantalla" id="p7" hidden>
-      <p class="ayuda">Esto es lo que vas a mandar. Tus primeras respuestas ya no se cambian:
-        así se queda limpia la impresión que tuviste antes de saber de qué era.</p>
+      <p class="ayuda">Esto es lo que me vas a mandar. Lo que contestaste antes de saber
+        de qué era ya no se cambia, para que se quede tu primera impresión.</p>
       <div class="resumen" id="resumen"></div>
 
+      <h2 class="pregunta-final">Ya nada más dime quién eres</h2>
+      <p class="ayuda">Así sé de quién viene cada opinión.</p>
+
       <label class="campo">
-        <span>Tu nombre</span>
-        <input type="text" id="quien" placeholder="Para saber de quién es cada opinión" autocomplete="name">
+        <span>¿Cómo te llamas?</span>
+        <input type="text" id="quien" placeholder="Tu nombre" autocomplete="name">
       </label>
       <div class="campo">
         <span class="campo-t" id="ocupacion-t">¿A qué te dedicas?</span>
@@ -672,7 +680,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <input type="text" id="ocupacion-detalle" maxlength="160" autocomplete="off">
       </label>
       <label class="campo">
-        <span>Tu correo <em style="color:var(--muted)">(opcional)</em></span>
+        <span>¿Me dejas tu correo? <em style="color:var(--muted)">(opcional)</em></span>
         <input type="email" id="correo" inputmode="email" autocomplete="email"
                placeholder="tunombre@correo.com">
       </label>
@@ -682,8 +690,8 @@ td.num.malo{color:var(--alerta);font-weight:700}
           <small>Solo te escribiré si marcas esta casilla. Para eso necesito tu correo.</small></span>
       </label>
       <label class="campo">
-        <span>¿Algo más? <em style="color:var(--muted)">(opcional)</em></span>
-        <textarea class="libre" id="libre" placeholder="Por ejemplo: Un nombre que te chocó, una idea mejor, lo que sea"></textarea>
+        <span>¿Algo más que me quieras decir? <em style="color:var(--muted)">(opcional)</em></span>
+        <textarea class="libre" id="libre" placeholder="Un nombre que te chocó, algo que no se entendió, lo que sea"></textarea>
       </label>
     </section>
 
@@ -751,6 +759,12 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <div class="memoria-stats" id="finalResumen"></div>
         <div id="finalGrupos" class="grupos"></div>
         <div id="finalCambios" class="grupos"></div>
+      </div>
+
+      <div id="bloqueSugerencias" hidden>
+        <h2>Nombres que sugirieron</h2>
+        <p class="mini">Son ideas sin filtro: ninguna ha pasado por la revisión de marcas.</p>
+        <div id="sugerencias" class="grupos"></div>
       </div>
 
       <h2>A qué les suena que vende</h2>
@@ -840,7 +854,7 @@ function insignia(p) {
   // su #1, la prueba ya no se repite.
   // revelado: ya vio de qué es el proyecto. De ahí no hay regreso a lo contestado a ciegas.
   var st = { elegidos: [], textos: {}, peor: '', peorPorque: '', memoria: '', memoriaDe: '',
-           finalista: '', finalistaPorque: '', revelado: false,
+           finalista: '', finalistaPorque: '', sugerencia: '', revelado: false,
            quien: '', correo: '', libre: '', ocupacion: '', ocupacionDetalle: '', acepta: false,
            paso: 1, idx: 0 };
 
@@ -850,7 +864,8 @@ function insignia(p) {
       localStorage.setItem(LLAVE, JSON.stringify({
         elegidos: st.elegidos, textos: st.textos,
         peor: st.peor, peorPorque: st.peorPorque, memoria: st.memoria, memoriaDe: st.memoriaDe,
-        finalista: st.finalista, finalistaPorque: st.finalistaPorque, revelado: st.revelado,
+        finalista: st.finalista, finalistaPorque: st.finalistaPorque,
+        sugerencia: st.sugerencia, revelado: st.revelado,
         quien: st.quien, correo: st.correo, libre: st.libre,
         ocupacion: st.ocupacion, ocupacionDetalle: st.ocupacionDetalle, acepta: st.acepta
       }));
@@ -867,6 +882,7 @@ function insignia(p) {
       st.memoria = g.memoria || ''; st.memoriaDe = g.memoriaDe || '';
       st.finalista = NOMBRES.indexOf(g.finalista) !== -1 ? g.finalista : '';
       st.finalistaPorque = g.finalistaPorque || '';
+      st.sugerencia = g.sugerencia || '';
       st.revelado = g.revelado === true;
       st.quien = g.quien || ''; st.correo = g.correo || ''; st.libre = g.libre || '';
       st.ocupacion = g.ocupacion || ''; st.ocupacionDetalle = g.ocupacionDetalle || '';
@@ -1119,6 +1135,7 @@ function insignia(p) {
     $('finalista-etiqueta').firstChild.nodeValue =
       cambio ? '¿Qué te hizo cambiar? ' : '¿Por qué ese? ';
     $('finalista-porque').value = st.finalistaPorque;
+    $('sugerencia').value = st.sugerencia;
   }
 
   function notaFinalista() {
@@ -1164,6 +1181,8 @@ function insignia(p) {
       0));
     if (st.finalista) c.appendChild(filaExtra('Ya sabiendo de qué es', st.finalista,
       notaFinalista(), conEditar ? REVELA : 0));
+    if (st.sugerencia) c.appendChild(filaExtra('Tu idea de nombre', st.sugerencia, '',
+      conEditar ? REVELA : 0));
   }
 
   function filaExtra(etiqueta, valor, nota, pasoEditar) {
@@ -1410,6 +1429,7 @@ function insignia(p) {
         return;
       }
       st.finalistaPorque = $('finalista-porque').value.trim();
+      st.sugerencia = $('sugerencia').value.trim();
       guardar();
       ir(7);
       return;
@@ -1476,6 +1496,11 @@ function insignia(p) {
 
   $('finalista-porque').addEventListener('input', function () {
     st.finalistaPorque = this.value;
+    guardar();
+  });
+
+  $('sugerencia').addEventListener('input', function () {
+    st.sugerencia = this.value;
     guardar();
   });
 
@@ -1566,6 +1591,7 @@ function insignia(p) {
         memoria: st.memoria,
         finalista: st.finalista,
         finalistaPorque: st.finalistaPorque,
+        sugerencia: st.sugerencia,
         libre: st.libre,
         ocupacion: st.ocupacion,
         ocupacionDetalle: st.ocupacionDetalle,
@@ -1706,6 +1732,7 @@ function insignia(p) {
     $('bloqueMemoria').hidden = true;
     $('bloqueLibres').hidden = true;
     $('bloqueFinal').hidden = true;
+    $('bloqueSugerencias').hidden = true;
     $('memoriaCorrectos').hidden = true;
 
     // El mismo permiso que abrió esta página sirve para bajar el archivo.
@@ -1863,6 +1890,17 @@ function insignia(p) {
         });
         fc.appendChild(gc);
       }
+    }
+
+    if (R.sugerencias && R.sugerencias.length) {
+      $('bloqueSugerencias').hidden = false;
+      var cs = limpiar('sugerencias');
+      var gs = grupo('Ideas de nombre', plural(R.sugerencias.length, 'idea', 'ideas'), true);
+      var bs = gs.querySelector('.grupo-body');
+      R.sugerencias.forEach(function (s) {
+        bs.appendChild(frase('<b>' + esc(s.texto) + '</b>', s.quien, false));
+      });
+      cs.appendChild(gs);
     }
 
     var cf = limpiar('frases');
@@ -2049,6 +2087,12 @@ function insignia(p) {
                               : 'No estaba en su podio';
         fin.appendChild(dato(r.finalista, rel + (r.finalistaPorque ? ' · ' + r.finalistaPorque : ''), ''));
         card.appendChild(fin);
+      }
+
+      if (r.sugerencia) {
+        var sug = seccion('Su idea de nombre');
+        sug.appendChild(dato(r.sugerencia, '', ''));
+        card.appendChild(sug);
       }
 
       if (r.libre) {
