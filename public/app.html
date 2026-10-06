@@ -403,12 +403,16 @@ body.parte2 .btn:not(.atras){box-shadow:inset 0 0 0 1px var(--oro-borde)}
   color:var(--p2-carta-ink);letter-spacing:-.01em;text-wrap:pretty;
 }
 .revela .mas{
-  font-size:15.5px;line-height:1.5;margin:10px 0 0;color:var(--p2-carta-ink-2);text-wrap:pretty;
+  font-size:16.5px;line-height:1.5;margin:10px 0 0;color:var(--p2-carta-ink-2);text-wrap:pretty;
 }
+/* Sin remates: es una pregunta, no un título. La letra con remates se queda
+   para los nombres y para la frase del proyecto. */
 .pregunta-final{
-  font-family:"Newsreader",Georgia,serif;font-weight:600;
-  font-size:22px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;
+  font-family:inherit;font-weight:700;
+  font-size:20px;line-height:1.25;margin:0 0 6px;text-wrap:balance;
 }
+/* La frase que abre la segunda parte: se lee como texto, no como nota al pie. */
+.ayuda.entrada{font-size:16px;color:var(--ink-2)}
 .pregunta-final + .ayuda{margin-bottom:16px}
 #finalista{margin-bottom:20px}
 </style>
@@ -638,7 +642,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
     <!-- 6 · revelar el proyecto y elegir finalista -->
     <section class="pantalla" id="p6" hidden>
-      <p class="ayuda">Hasta aquí opinaste sin saber de qué era. Ya te puedo contar.</p>
+      <p class="ayuda entrada">Hasta aquí opinaste sin saber de qué era. Ya te puedo contar.</p>
       <div class="revela">
         <p class="lugar">El proyecto</p>
         <div id="proyecto"></div>
