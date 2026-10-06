@@ -41,9 +41,15 @@ const OCUPACIONES = [
 const nombreOcupacion = id => (OCUPACIONES.find(o => o.id === id) || {}).nombre || '';
 
 // Lo que se le cuenta a la persona DESPUÉS de opinar a ciegas, justo antes de
-// pedirle un solo finalista. Corto y neutro: describe, no vende.
-const PROYECTO = 'Es una app para que un negocio pequeño lleve sus ventas, ' +
-                 'su inventario y sus gastos.';
+// pedirle un solo finalista. Describe, no vende. El primer párrafo va en grande;
+// los demás, abajo, en texto normal.
+const PROYECTO = [
+  'Es una app para administrar un negocio pequeño o mediano, de cualquier giro: ' +
+  'una tienda, una cafetería, una estética, un taller.',
+  'Sirve para cobrar y registrar las ventas, llevar el inventario, las compras y ' +
+  'los gastos, y hacer el corte de caja. El dueño ve desde su celular o su ' +
+  'computadora cómo va el negocio: cuánto vendió, cuánto gastó y cuánto le quedó.'
+];
 
 const TOP = 5;                      // cuántos lugares pide
 const OBLIGATORIAS = 3;             // cuántas explicaciones son obligatorias

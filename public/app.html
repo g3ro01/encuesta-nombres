@@ -362,6 +362,9 @@ div.campo{margin-bottom:14px}
   font-size:clamp(20px,5.4vw,24px);line-height:1.3;margin:0;
   color:var(--ink);letter-spacing:-.01em;text-wrap:pretty;
 }
+.revela .mas{
+  font-size:15.5px;line-height:1.5;margin:10px 0 0;color:var(--ink-2);text-wrap:pretty;
+}
 .pregunta-final{
   font-family:"Newsreader",Georgia,serif;font-weight:600;
   font-size:22px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;
@@ -598,7 +601,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
       <p class="ayuda">Hasta aquí opinaste sin saber de qué era. Ya te puedo contar.</p>
       <div class="revela">
         <p class="lugar">El proyecto</p>
-        <p class="que" id="proyecto"></p>
+        <div id="proyecto"></div>
       </div>
       <h2 class="pregunta-final">Sabiendo esto, ¿cuál nombre le queda mejor?</h2>
       <p class="ayuda">Puede ser el mismo que ya traías o uno distinto. Las dos cosas me sirven.</p>
@@ -788,7 +791,7 @@ function insignia(p) {
   'use strict';
 
   // La lista vive en el servidor (server.js). Aquí solo se recibe.
-  var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [], PROYECTO = '';
+  var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [], PROYECTO = [];
   var LLAVE = 'encuesta-nombres-v1';
 
   var $ = function (id) { return document.getElementById(id); };
@@ -1045,7 +1048,15 @@ function insignia(p) {
   /* ---------- 6 · finalista, ya sabiendo de qué es ---------- */
   // Van todos, sin marcar cuáles traía: que elija de nuevo, no que confirme.
   function pintarFinalista() {
-    $('proyecto').textContent = PROYECTO;
+    // Primer párrafo en grande; los demás, abajo, como detalle.
+    var caja = $('proyecto');
+    caja.innerHTML = '';
+    PROYECTO.forEach(function (texto, i) {
+      var p = document.createElement('p');
+      p.className = i === 0 ? 'que' : 'mas';
+      p.textContent = texto;
+      caja.appendChild(p);
+    });
     var c = $('finalista');
     c.innerHTML = '';
     vitrina.forEach(function (n) {
@@ -1545,7 +1556,7 @@ function insignia(p) {
     .then(function (cfg) {
       NOMBRES = cfg.candidatos; TOP = cfg.top; OBLIG = cfg.obligatorias;
       OCUP = cfg.ocupaciones || [];
-      PROYECTO = cfg.proyecto || '';
+      PROYECTO = [].concat(cfg.proyecto || []);
       barajar();
       recuperar();
       // Quien ya vio de qué es el proyecto regresa ahí, no al principio.
