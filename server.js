@@ -127,17 +127,18 @@ async function prepararBase() {
 
 async function guardar(fila) {
   if (!pool) {
-    memoria.push({ id: memoriaId++, ...fila, creado: new Date(), excluida: false, excluidaEn: null });
+    memoria.push({ id: memoriaId++, ...fila, creado: fila.creado || new Date(), excluida: false, excluidaEn: null });
     return;
   }
   await pool.query(
     'INSERT INTO respuestas (quien, correo, orden, porque, peor, peor_porque, memoria, libre, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia) ' +
-    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)',
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia, creado) ' +
+    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::timestamptz, now()))',
     [fila.quien, fila.correo, JSON.stringify(fila.orden), JSON.stringify(fila.porque),
      fila.peor, fila.peorPorque, fila.memoria, fila.libre,
      fila.ocupacion, fila.ocupacionDetalle, fila.aceptaInfo, JSON.stringify(fila.vistos),
-     fila.finalista, fila.finalistaPorque, fila.sugerencia]
+     fila.finalista, fila.finalistaPorque, fila.sugerencia,
+     fila.creado ? new Date(fila.creado).toISOString() : null]
   );
 }
 
@@ -227,13 +228,14 @@ async function cambiarActivo(c, activo) {
 
 // Cada nombre actual y cada alias (sin importar mayúsculas) apuntan al nombre
 // actual. Primero los actuales, para que un alias nunca le gane a un nombre vivo.
+// Sin importar acentos: «Kávixi» y «Kavixi» son el mismo candidato.
 function mapaNombres(candidatos) {
   const m = new Map();
-  candidatos.forEach(c => m.set(c.nombre.toLowerCase(), c.nombre));
+  candidatos.forEach(c => m.set(llano(c.nombre), c.nombre));
   candidatos.forEach(c => c.alias.forEach(a => {
-    if (!m.has(a.toLowerCase())) m.set(a.toLowerCase(), c.nombre);
+    if (!m.has(llano(a))) m.set(llano(a), c.nombre);
   }));
-  return n => m.get(String(n || '').trim().toLowerCase()) || null;
+  return n => m.get(llano(n)) || null;
 }
 
 // Para la prueba de memoria: sin acentos ni mayúsculas. Quien escribe «Kavixi»
@@ -245,9 +247,9 @@ const limpiarNombre = v => String(v || '').trim().replace(/\s+/g, ' ');
 
 // Un nombre nuevo no puede repetir uno actual ni uno que otro candidato tuvo antes.
 function choca(candidatos, nombre, propioId) {
-  const n = nombre.toLowerCase();
+  const n = llano(nombre);
   return candidatos.some(c => c.id !== propioId &&
-    (c.nombre.toLowerCase() === n || c.alias.some(a => a.toLowerCase() === n)));
+    (llano(c.nombre) === n || c.alias.some(a => llano(a) === n)));
 }
 
 /* ---------- cálculo ---------- */
@@ -644,6 +646,126 @@ app.post('/api/candidatos/:id', async (req, res) => {
   }
 });
 
+/* ---------- importar desde el CSV ---------- */
+
+// Lee el CSV que baja /api/csv: celdas entre comillas, "" para una comilla y
+// saltos de línea permitidos dentro de una celda.
+function leerCsv(texto) {
+  const s = String(texto || '').replace(/^\uFEFF/, '');
+  const filas = [];
+  let fila = [], celda = '', comillas = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (comillas) {
+      if (ch === '"') {
+        if (s[i + 1] === '"') { celda += '"'; i++; } else comillas = false;
+      } else celda += ch;
+    } else if (ch === '"') comillas = true;
+    else if (ch === ',') { fila.push(celda); celda = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && s[i + 1] === '\n') i++;
+      fila.push(celda); filas.push(fila); fila = []; celda = '';
+    } else celda += ch;
+  }
+  if (celda !== '' || fila.length) { fila.push(celda); filas.push(fila); }
+  return filas.filter(f => f.some(c => c.trim() !== ''));
+}
+
+// Para pasar las respuestas a una base nueva. Las que ya están (misma fecha y
+// misma persona) se saltan, así que subir el archivo dos veces no duplica nada.
+app.post('/api/importar', express.text({ type: () => true, limit: '5mb' }), async (req, res) => {
+  if (!claveOk(req.query.clave)) return res.status(403).json({ error: 'Clave incorrecta.' });
+  try {
+    const filas = leerCsv(req.body);
+    const cab = (filas[0] || []).map(h => h.trim());
+    const col = n => cab.indexOf(n);
+    if (col('quien') === -1 || col('lugar_' + TOP) === -1) {
+      return res.status(400).json({ error: 'Ese archivo no es el CSV de esta encuesta.' });
+    }
+    if (filas.length < 2) return res.status(400).json({ error: 'El archivo no trae respuestas.' });
+    const dato = (f, n) => (col(n) === -1 ? '' : String(f[col(n)] || '').trim());
+    const llave = (creado, quien) => new Date(creado).toISOString() + '|' + llano(quien);
+
+    let candidatos = await leerCandidatos();
+    const ya = new Set((await leerTodas()).map(f => llave(f.creado, f.quien)));
+    const nuevosNombres = [];
+    const rechazadas = [];
+    let importadas = 0, repetidas = 0;
+
+    // Un nombre que la base no conoce (agregado a media encuesta) se da de alta
+    // oculto, para que sus votos cuenten sin que vuelva a salir en la encuesta.
+    async function conocer(nombre) {
+      if (!nombre || mapaNombres(candidatos)(nombre)) return true;
+      const limpio = limpiarNombre(nombre);
+      if (!NOMBRE_OK.test(limpio)) return false;
+      const c = await agregarCandidato(limpio);
+      await cambiarActivo(c, false);
+      candidatos = await leerCandidatos();
+      nuevosNombres.push(limpio);
+      return true;
+    }
+
+    for (let i = 1; i < filas.length; i++) {
+      const f = filas[i];
+      const quien = dato(f, 'quien').slice(0, 80);
+      const orden = [];
+      for (let k = 1; k <= TOP; k++) orden.push(dato(f, 'lugar_' + k));
+      if (!quien || orden.some(n => !n)) {
+        rechazadas.push({ fila: i + 1, motivo: 'le falta el nombre de la persona o algún lugar' });
+        continue;
+      }
+      const fecha = new Date(dato(f, 'fecha'));
+      const creado = isNaN(fecha.getTime()) ? new Date() : fecha;
+      if (ya.has(llave(creado, quien))) { repetidas++; continue; }
+
+      const peor = dato(f, 'descarta');
+      const finalista = dato(f, 'finalista');
+      // Archivos bajados antes de esta columna no la traen: cuentan como la lista original.
+      const vio = col('nombres_que_vio') === -1 ? null
+        : dato(f, 'nombres_que_vio').split('|').map(n => n.trim()).filter(Boolean);
+      let ok = true;
+      for (const n of [...orden, peor, finalista]) if (!(await conocer(n))) ok = false;
+      // Uno que solo vio (sin votarlo) tampoco debe perderse: así «Lo vieron» no cambia.
+      for (const n of vio || []) await conocer(n);
+      const canon = mapaNombres(candidatos);
+      if (!ok || new Set(orden.map(canon)).size !== TOP) {
+        rechazadas.push({ fila: i + 1, motivo: 'trae un nombre repetido o que no se pudo dar de alta' });
+        continue;
+      }
+
+      const porque = [];
+      for (let k = 1; k <= TOP; k++) porque.push(dato(f, 'vende_' + k).slice(0, 400));
+      const ocup = OCUPACIONES.find(o => llano(o.nombre) === llano(dato(f, 'ocupacion')));
+
+      await guardar({
+        creado,
+        quien,
+        correo: dato(f, 'correo').slice(0, 120),
+        orden,
+        porque,
+        peor,
+        peorPorque: dato(f, 'por_que_descarta').slice(0, 400),
+        memoria: dato(f, 'escribio_de_memoria').slice(0, 80),
+        libre: dato(f, 'libre').slice(0, 600),
+        ocupacion: ocup ? ocup.id : '',
+        ocupacionDetalle: dato(f, 'a_que_se_dedica').slice(0, 160),
+        aceptaInfo: llano(dato(f, 'acepta_info')) === 'si',
+        vistos: vio && vio.length ? vio : null,
+        finalista,
+        finalistaPorque: finalista ? dato(f, 'por_que_finalista').slice(0, 400) : '',
+        sugerencia: dato(f, 'sugiere_otro_nombre').slice(0, 60)
+      });
+      ya.add(llave(creado, quien));
+      importadas++;
+    }
+
+    res.json({ ok: true, importadas, repetidas, rechazadas, nuevosNombres });
+  } catch (err) {
+    console.error('[error] al importar:', err.message);
+    res.status(500).json({ error: 'No se pudo importar el archivo.' });
+  }
+});
+
 // Descarga en CSV, por si quieres meterlo a una hoja.
 app.get('/api/csv', async (req, res) => {
   if (!claveOk(req.query.clave)) return res.status(403).send('Clave incorrecta.');
@@ -657,6 +779,9 @@ app.get('/api/csv', async (req, res) => {
   // Al final, para no mover las columnas de quien ya importaba el CSV.
   cab.push('ocupacion', 'a_que_se_dedica', 'acepta_info');
   cab.push('finalista', 'por_que_finalista', 'finalista_era_su_1', 'sugiere_otro_nombre');
+  // Qué nombres le aparecieron a cada quien. Sirve para importar el archivo a
+  // una base nueva sin que cambien los promedios de los nombres agregados.
+  cab.push('nombres_que_vio');
 
   const lineas = [cab.join(',')];
   filas.forEach(f => {
@@ -678,6 +803,7 @@ app.get('/api/csv', async (req, res) => {
                 ? (fin.toLowerCase() === String(orden[0]).toLowerCase() ? 'sí' : 'no')
                 : '');
     fila.push(f.sugerencia || '');
+    fila.push((Array.isArray(f.vistos) ? f.vistos : ORIGINALES).join(' | '));
     lineas.push(fila.map(celda).join(','));
   });
 

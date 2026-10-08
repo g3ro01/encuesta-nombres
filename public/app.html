@@ -537,7 +537,8 @@ td.num.malo{color:var(--alerta);font-weight:700}
 
 /* Nombres de la encuesta: agregar, renombrar, ocultar. */
 .agregar{display:flex;gap:9px;margin:12px 0}
-.agregar input[type=text]{flex:1;min-width:0}
+.agregar input[type=text], .agregar input[type=file]{flex:1;min-width:0}
+.agregar input[type=file]{font:inherit;font-size:14px;color:var(--ink-2)}
 .nombres{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
 .nomb{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line-soft);
   border-radius:10px;padding:10px 12px;box-shadow:var(--shadow)}
@@ -816,6 +817,19 @@ td.num.malo{color:var(--alerta);font-weight:700}
         <button class="btn-mini" type="submit">Agregar</button>
       </form>
       <div id="listaNombres" class="nombres"></div>
+    </div>
+
+    <!-- También fuera de conDatos: sirve justo cuando la base está vacía. -->
+    <div id="bloqueImportar" hidden>
+      <h2>Importar respuestas</h2>
+      <p class="mini">Sube el CSV que bajaste de esta página para pasar las respuestas a una base
+        nueva. Las que ya estén no se duplican. Si el archivo trae un nombre que la lista no tiene,
+        se agrega oculto para que sus votos cuenten.</p>
+      <form class="agregar" id="formImportar">
+        <input type="file" id="archivoCsv" accept=".csv,text/csv">
+        <button class="btn-mini" type="submit">Importar</button>
+      </form>
+      <p class="mini" id="importarMsg"></p>
     </div>
   </div>
 </div>
@@ -1732,6 +1746,7 @@ function insignia(p) {
 
     pintarFiltro(R);
     pintarNombres(R.candidatos || [], R.tabla || []);
+    $('bloqueImportar').hidden = false;
 
     $('sinDatos').hidden = true;
     $('conDatos').hidden = true;
@@ -2244,6 +2259,47 @@ function insignia(p) {
     });
     $('bloqueNombres').hidden = false;
   }
+
+  $('formImportar').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var archivo = $('archivoCsv').files[0];
+    var msg = $('importarMsg');
+    if (!archivo) { msg.textContent = 'Primero elige el archivo CSV.'; return; }
+    confirmar({
+      titulo: '¿Importar «' + archivo.name + '»?',
+      texto: 'Las respuestas del archivo se suman a las que ya hay. Las que ya estén se saltan.',
+      si: 'Importar'
+    }).then(function (ok) {
+      if (!ok) return;
+      msg.textContent = 'Importando…';
+      return archivo.text()
+        .then(function (texto) {
+          return fetch('/api/importar?clave=' + encodeURIComponent(clave), {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/csv; charset=utf-8' },
+            body: texto
+          });
+        })
+        .then(function (r) {
+          return r.json().then(function (j) {
+            if (!r.ok) throw new Error(j.error || 'No se pudo importar.');
+            return j;
+          });
+        })
+        .then(function (j) {
+          var partes = [plural(j.importadas, 'respuesta importada', 'respuestas importadas')];
+          if (j.repetidas) partes.push('se saltaron ' + j.repetidas + ' que ya estaban');
+          if (j.rechazadas.length) {
+            partes.push(plural(j.rechazadas.length, 'fila no se pudo leer', 'filas no se pudieron leer') +
+              ' (' + j.rechazadas.map(function (x) { return 'fila ' + x.fila + ': ' + x.motivo; }).join('; ') + ')');
+          }
+          if (j.nuevosNombres.length) partes.push('se agregaron ocultos: ' + j.nuevosNombres.join(', '));
+          msg.textContent = partes.join('. ') + '.';
+          $('archivoCsv').value = '';
+          cargarResultados();
+        });
+    }).catch(function (err) { msg.textContent = err.message || 'No se pudo importar.'; });
+  });
 
   $('formAgregar').addEventListener('submit', function (e) {
     e.preventDefault();
