@@ -44,8 +44,8 @@ const nombreOcupacion = id => (OCUPACIONES.find(o => o.id === id) || {}).nombre 
 // pedirle un solo finalista. Describe, no vende. El primer párrafo va en grande;
 // los demás, abajo, en texto normal.
 const PROYECTO = [
-  'Es una app para administrar un negocio pequeño o mediano, de cualquier giro: ' +
-  'una tienda, una cafetería, una estética, un taller.',
+  'Es una app para administrar pequeños y medianos negocios de cualquier giro: ' +
+  'tiendas, cafeterías, taquerías, estéticas, talleres, etc.',
   'Sirve para cobrar en efectivo o con tarjeta y registrar cada venta, llevar el ' +
   'inventario, las compras y los gastos, y hacer el corte de caja. El dueño ve ' +
   'desde su celular o su computadora cómo va el negocio: cuánto vendió, cuánto ' +
