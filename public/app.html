@@ -629,6 +629,10 @@ details.resp[open] > summary::after{content:"-"}
 details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
 .resp .linea-r{font-size:14px;color:var(--ink-2);margin:2px 0 1px;overflow-wrap:anywhere}
 .resp-cuerpo{padding:0 15px 14px}
+.buscar-resp{display:flex;gap:8px;margin:0 0 12px}
+.buscar-resp input{flex:1;min-width:0;font:inherit;font-size:16px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.buscar-resp input:focus{outline:2px solid var(--accent-texto);outline-offset:1px;border-color:var(--accent-texto)}
 .resp-cuerpo > .sec:first-child{border-top:0}
 
 @media (min-width:900px){
@@ -857,8 +861,13 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
     </section>
 
     <section class="panel" id="panel-respuestas" role="tabpanel" hidden>
-      <p class="mini primero">Toca una respuesta para ver todo lo que contestó. «Excluir» la saca de
-        los resultados y del CSV sin borrarla; el bote de basura la borra para siempre.</p>
+      <p class="mini primero">Cada participante es una fila: tócala para ver todo lo que contestó.
+        «Excluir» la saca de los resultados y del CSV sin borrarla; el bote de basura la borra para siempre.</p>
+      <div class="buscar-resp">
+        <input type="search" id="buscarResp" placeholder="Buscar persona" autocomplete="off" aria-label="Buscar persona">
+        <button class="btn-mini" type="button" id="abrirTodas">Abrir todas</button>
+      </div>
+      <p class="mini" id="buscarNada" hidden>No hay nadie con ese nombre.</p>
       <div id="respuestas" class="respuestas"></div>
     </section>
 
@@ -2128,6 +2137,7 @@ function insignia(p) {
       var card = document.createElement('details');
       card.className = 'resp' + (r.excluida ? ' excluida' : '');
       card.setAttribute('data-id', r.id);
+      card.setAttribute('data-quien', llano(r.quien || ''));
       card.open = !!abiertas[r.id];
 
       var resumen = '★ ' + (orden[0] || '—') + (r.finalista ? ' → finalista ' + r.finalista : '');
@@ -2232,9 +2242,39 @@ function insignia(p) {
       cuerpo.appendChild(pie);
 
       card.appendChild(cuerpo);
+      card.addEventListener('toggle', rotularAbrir);
       c.appendChild(card);
     });
+    filtrarRespuestas();
   }
+
+  /* --- buscar una persona y abrir o cerrar todas de un jalón --- */
+  function visibles() {
+    return Array.prototype.filter.call(document.querySelectorAll('#respuestas details.resp'),
+      function (d) { return !d.hidden; });
+  }
+  function rotularAbrir() {
+    var v = visibles();
+    var todas = v.length && v.every(function (d) { return d.open; });
+    $('abrirTodas').textContent = todas ? 'Cerrar todas' : 'Abrir todas';
+  }
+  function filtrarRespuestas() {
+    var q = llano($('buscarResp').value);
+    var hay = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('#respuestas details.resp'), function (d) {
+      d.hidden = !!q && d.getAttribute('data-quien').indexOf(q) === -1;
+      if (!d.hidden) hay++;
+    });
+    $('buscarNada').hidden = !q || hay > 0;
+    rotularAbrir();
+  }
+  $('buscarResp').addEventListener('input', filtrarRespuestas);
+  $('abrirTodas').addEventListener('click', function () {
+    var v = visibles();
+    var abrir = !v.every(function (d) { return d.open; });
+    v.forEach(function (d) { d.open = abrir; });
+    rotularAbrir();
+  });
 
   // Pregunta con un diálogo propio; si el navegador no tiene <dialog>, usa confirm().
   function confirmar(o) {
