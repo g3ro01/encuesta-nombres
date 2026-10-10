@@ -261,7 +261,7 @@ function calcular(filas, candidatos) {
   candidatos.forEach(c => {
     acc[c.nombre] = { nombre: c.nombre, activo: c.activo, vistos: 0, puntos: 0, menciones: 0,
                       primeros: 0, sumaPos: 0, frases: [], descartes: 0, quejas: [],
-                      finalistas: 0, razones: [] };
+                      finalistas: 0, razones: [], memIntentos: 0, memFallos: [] };
   });
 
   // Segunda vuelta: el único nombre que eligen ya sabiendo de qué es el proyecto.
@@ -305,12 +305,14 @@ function calcular(filas, candidatos) {
     // después se haya renombrado.
     const escrito = String(f.memoria || '').trim();
     if (escrito && orden[0]) {
-      memoria.push({
-        quien,
-        objetivo: orden[0],
-        escrito,
-        acierto: llano(escrito) === llano(orden[0])
-      });
+      const acierto = llano(escrito) === llano(orden[0]);
+      memoria.push({ quien, objetivo: orden[0], escrito, acierto });
+      // También por nombre, para verlo junto con todo lo demás de ese nombre.
+      const uno = acc[canon(orden[0])];
+      if (uno) {
+        uno.memIntentos += 1;
+        if (!acierto) uno.memFallos.push({ quien, escrito });
+      }
     }
 
     // lugar = dónde tenía ese nombre a ciegas (0: no estaba en su podio).
@@ -350,7 +352,9 @@ function calcular(filas, candidatos) {
       descartes: a.descartes,
       quejas: a.quejas,
       finalistas: a.finalistas,
-      razones: a.razones
+      razones: a.razones,
+      memIntentos: a.memIntentos,
+      memFallos: a.memFallos
     };
   }).sort((x, y) => y.promedio - x.promedio || y.puntos - x.puntos || y.menciones - x.menciones);
 

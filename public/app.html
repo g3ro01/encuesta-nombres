@@ -508,8 +508,8 @@ td.num.malo{color:var(--alerta);font-weight:700}
 .resp-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .resp h3{font-family:"Newsreader",Georgia,serif;font-size:20px;line-height:1.15;margin:0 0 3px}
 .resp .meta{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
-.resp .sec{margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft)}
-.resp .sec-t{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+.sec{margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft)}
+.sec-t{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
   font-weight:700;margin:0 0 7px}
 .resp .lug{display:grid;grid-template-columns:30px 1fr;gap:9px;align-items:start;margin-bottom:8px}
 .resp .lug:last-child{margin-bottom:0}
@@ -521,7 +521,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
 .resp .dc.vacio{color:var(--muted);font-style:italic}
 .resp .bien{color:var(--ok);font-weight:700}
 .resp .mal{color:var(--alerta);font-weight:700}
-.resp-pie{display:flex;margin-top:14px}
+.resp-pie{display:flex;gap:8px;margin-top:14px}
 .resp-pie .btn-mini{flex:1}
 .btn-borrar{flex:0 0 38px;width:38px;height:38px;border-radius:9px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
@@ -570,15 +570,75 @@ td.num.malo{color:var(--alerta);font-weight:700}
 .btn-mini.alerta{color:var(--alerta)}
 .btn-mini[disabled]{opacity:.5;cursor:default}
 .btn-mini.peligro,.btn-mini.peligro:hover{background:var(--alerta);border-color:var(--alerta);color:var(--surface)}
-@media (max-width:820px){
-  .res-head{display:block}
-  .btn-csv{margin-top:10px}
-  .memoria-stats{grid-template-columns:1fr}
+/* ---------- pestañas ---------- */
+.res-head{display:block;margin-bottom:6px}
+.res-head h1{margin-bottom:6px}
+/* Las cuatro caben completas aun en un celular angosto: cada una mide lo que su palabra. */
+.pestanas{position:sticky;top:0;z-index:15;display:flex;gap:5px;
+  background:var(--ground);padding:10px 0;margin:6px 0 16px;border-bottom:1px solid var(--line-soft)}
+.pestanas button{flex:1 1 auto;max-width:150px;font:inherit;font-size:13.5px;font-weight:700;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 8px;cursor:pointer;white-space:nowrap}
+@media (max-width:380px){ .pestanas button{font-size:12.5px;padding:7px 5px} }
+.pestanas button:hover{border-color:var(--accent-texto)}
+.pestanas button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.panel .primero{margin-top:0}
+.res h2.primero{margin-top:4px}
+.metricas{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+#finalResumen{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:12px}
+
+/* ---------- ranking compacto ---------- */
+.ranking{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.fila-rank{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;
+  text-align:left;font:inherit;color:inherit;cursor:pointer;
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:11px 13px;box-shadow:var(--shadow)}
+.fila-rank:hover{border-color:var(--accent-texto)}
+.fila-rank.oculto{opacity:.62}
+.fila-rank .pos{color:var(--muted);font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.fila-rank .nm{font-family:"Newsreader",Georgia,serif;font-size:19px;font-weight:600;line-height:1.2}
+.fila-rank .barra-wrap{display:block;height:6px;border-radius:3px;background:var(--surface-2);margin:7px 0 6px}
+.fila-rank .barra{display:block;height:100%;min-width:2px}
+.fila-rank .det{display:block;font-size:12.5px;color:var(--muted);line-height:1.4}
+.fila-rank .prom{font-weight:700;font-size:17px;color:var(--accent-texto);font-variant-numeric:tabular-nums}
+.como{margin-top:10px}
+.como summary{cursor:pointer;color:var(--accent-texto);font-size:13.5px;font-weight:700}
+
+/* ---------- por nombre ---------- */
+.nombre-card{scroll-margin-top:72px}
+.nombre-card.oculto{opacity:.7}
+.nombre-card .grupo-body{max-height:none}
+.nombre-card summary .pos{min-width:20px;color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+.nombre-card summary b{flex:1;min-width:0}
+.nombre-card .sec:first-of-type{border-top:0;padding-top:0}
+.det-linea{font-size:13px;color:var(--muted);margin:0 0 10px;line-height:1.45}
+.nombre-card .frase{padding:8px 12px;margin-bottom:6px;font-size:14px}
+.nombre-card .frase .de{margin-top:2px}
+.veces{display:inline-block;margin-left:6px;font-size:12px;font-weight:700;color:var(--accent-texto);
+  border:1px solid var(--line);border-radius:999px;padding:0 7px;vertical-align:1px}
+
+/* ---------- respuestas plegadas ---------- */
+.respuestas{grid-template-columns:1fr}
+details.resp{padding:0}
+details.resp > summary{list-style:none;cursor:pointer;padding:13px 15px;display:flex;
+  align-items:flex-start;justify-content:space-between;gap:10px}
+details.resp > summary::-webkit-details-marker{display:none}
+details.resp > summary::after{content:"+";font-weight:700;color:var(--muted);flex:0 0 auto}
+details.resp[open] > summary::after{content:"-"}
+details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
+.resp .linea-r{font-size:14px;color:var(--ink-2);margin:2px 0 1px;overflow-wrap:anywhere}
+.resp-cuerpo{padding:0 15px 14px}
+.resp-cuerpo > .sec:first-child{border-top:0}
+
+@media (min-width:900px){
+  .respuestas{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:520px){
-  .metricas{grid-template-columns:1fr}
-  .kpi{min-height:auto}
+  .metricas{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  #finalResumen{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{min-height:auto;padding:11px 12px}
+  .kpi .val{font-size:21px}
+  .kpi .nota-kpi{font-size:12px}
   .grupo summary{align-items:flex-start}
+  .res{padding-top:20px}
 }
 </style>
 </head>
@@ -743,108 +803,93 @@ td.num.malo{color:var(--alerta);font-weight:700}
 <div id="vista-resultados" hidden>
   <div class="res">
     <div class="res-head">
-      <div>
-        <h1>Resultados</h1>
-        <p class="intro" id="cuantas"></p>
-        <label class="filtro" id="filtroCaja" hidden>
-          <span>Ver respuestas de</span>
-          <select id="filtro"></select>
-        </label>
-      </div>
-      <a id="bajarCsv" class="btn-csv" hidden>&#8595;&nbsp; Bajar CSV</a>
+      <h1>Resultados</h1>
+      <p class="intro" id="cuantas"></p>
+      <label class="filtro" id="filtroCaja" hidden>
+        <span>Ver respuestas de</span>
+        <select id="filtro"></select>
+      </label>
     </div>
 
-    <div id="sinDatos" class="vacio-msg" hidden>
-      Todavía no llega ninguna respuesta. Comparte el link y vuelve aquí.
-    </div>
+    <!-- Una pestaña a la vez: lo que antes era una sola página larguísima. -->
+    <nav class="pestanas" id="pestanas" role="tablist" aria-label="Secciones">
+      <button type="button" role="tab" data-p="resumen" aria-selected="true">Resumen</button>
+      <button type="button" role="tab" data-p="nombres" aria-selected="false">Nombres</button>
+      <button type="button" role="tab" data-p="respuestas" aria-selected="false">Respuestas</button>
+      <button type="button" role="tab" data-p="ajustes" aria-selected="false">Ajustes</button>
+    </nav>
 
-    <div id="conDatos" hidden>
+    <div id="sinDatos" class="vacio-msg" hidden></div>
+
+    <section class="panel" id="panel-resumen" role="tabpanel">
       <div class="metricas" id="metricas"></div>
       <div class="lectura" id="lecturaRapida"></div>
 
-      <h2>Ranking general</h2>
-      <div class="caja">
-        <table>
-          <thead><tr>
-            <th>#</th><th>Nombre</th><th>Promedio</th><th></th>
-            <th>Lo eligió</th><th>1er lugar</th><th>Finalista</th><th>Pos. media</th><th>Lo descartó</th><th>Lo vieron</th>
-          </tr></thead>
-          <tbody id="filas"></tbody>
-        </table>
-      </div>
-      <p class="mini">Promedio = puntos entre las personas que vieron ese nombre. Cada 1er lugar vale
-        <span id="topPts"></span> puntos y el último vale 1. «Lo eligió» es el porcentaje
-        de quienes lo vieron que lo metió a su top. Ojo con los nombres que vio poca gente.</p>
+      <h2>Ranking</h2>
+      <p class="mini">Toca un nombre para ver todo lo que dijeron de él.</p>
+      <ol class="ranking" id="ranking"></ol>
+      <details class="como">
+        <summary>¿Cómo se calcula?</summary>
+        <p class="mini">El número de la derecha es el promedio: puntos entre las personas que vieron
+          ese nombre. Cada 1er lugar vale <span id="topPts"></span> puntos y el último vale 1.
+          «Lo eligió» es el porcentaje de quienes lo vieron que lo metió a su top. Ojo con los
+          nombres que vio poca gente.</p>
+      </details>
 
       <div id="bloqueFinal" hidden>
         <h2>Ya sabiendo de qué es</h2>
         <p class="mini" id="finalNota"></p>
-        <div class="memoria-stats" id="finalResumen"></div>
-        <div id="finalGrupos" class="grupos"></div>
+        <div class="metricas" id="finalResumen"></div>
         <div id="finalCambios" class="grupos"></div>
       </div>
 
-      <div id="bloqueSugerencias" hidden>
-        <h2>Nombres que sugirieron</h2>
-        <p class="mini">Son ideas sin filtro: ninguna ha pasado por la revisión de marcas.</p>
-        <div id="sugerencias" class="grupos"></div>
+      <div id="bloqueComentarios" hidden>
+        <h2>Comentarios</h2>
+        <div id="comentarios" class="grupos"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-nombres" role="tabpanel" hidden>
+      <p class="mini primero">En el orden del ranking. Ábrelo para ver qué le suena que vende, quién
+        lo escogió de finalista, por qué lo descartaron y cómo les fue de memoria.</p>
+      <div id="porNombre" class="grupos"></div>
+    </section>
+
+    <section class="panel" id="panel-respuestas" role="tabpanel" hidden>
+      <p class="mini primero">Toca una respuesta para ver todo lo que contestó. «Excluir» la saca de
+        los resultados y del CSV sin borrarla; el bote de basura la borra para siempre.</p>
+      <div id="respuestas" class="respuestas"></div>
+    </section>
+
+    <section class="panel" id="panel-ajustes" role="tabpanel" hidden>
+      <h2 class="primero">Descargar</h2>
+      <p class="mini">Todas las respuestas activas, para abrirlas en una hoja de cálculo.</p>
+      <a id="bajarCsv" class="btn-csv" hidden>&#8595;&nbsp; Bajar CSV</a>
+
+      <!-- Los nombres se administran aunque no haya respuestas. -->
+      <div id="bloqueNombres" hidden>
+        <h2>Nombres de la encuesta</h2>
+        <p class="mini">Los cambios aplican a quien abra la encuesta desde ahora. Renombrar conserva
+          los votos que ya tenía. Ocultar lo quita de la encuesta sin perder sus resultados.</p>
+        <form class="agregar" id="formAgregar">
+          <input type="text" id="nuevoNombre" placeholder="Nombre nuevo" maxlength="30" autocomplete="off">
+          <button class="btn-mini" type="submit">Agregar</button>
+        </form>
+        <div id="listaNombres" class="nombres"></div>
       </div>
 
-      <h2>A qué les suena que vende</h2>
-      <div id="frases" class="grupos"></div>
-
-      <div id="bloqueDescartes" hidden>
-        <h2>Los que descartarían</h2>
-        <div id="descartes" class="grupos"></div>
+      <div id="bloqueImportar" hidden>
+        <h2>Importar respuestas</h2>
+        <p class="mini">Sube el CSV que bajaste de esta página para pasar las respuestas a una base
+          nueva. Las que ya estén no se duplican. Si el archivo trae un nombre que la lista no tiene,
+          se agrega oculto para que sus votos cuenten.</p>
+        <form class="agregar" id="formImportar">
+          <input type="file" id="archivoCsv" accept=".csv,text/csv">
+          <button class="btn-mini" type="submit">Importar</button>
+        </form>
+        <p class="mini" id="importarMsg"></p>
       </div>
-
-      <div id="bloqueMemoria" hidden>
-        <h2>Prueba de memoria</h2>
-        <div class="memoria-stats" id="memoriaResumen"></div>
-        <div id="memoriaFallos" class="grupos"></div>
-        <details id="memoriaCorrectos" class="grupo" hidden>
-          <summary><b>Aciertos de memoria</b><span class="pill" id="memoriaCorrectosConteo"></span></summary>
-          <div class="grupo-body" id="memoriaAciertos"></div>
-        </details>
-      </div>
-
-      <div id="bloqueLibres" hidden>
-        <h2>Comentarios libres</h2>
-        <div id="libres" class="grupos"></div>
-      </div>
-
-      <div id="bloqueRespuestas">
-        <h2>Respuestas individuales</h2>
-        <p class="mini">«Excluir» saca una respuesta de los resultados y del CSV sin borrarla,
-          y puedes restaurarla. El bote de basura la borra para siempre.</p>
-        <div id="respuestas" class="respuestas"></div>
-      </div>
-    </div>
-
-    <!-- Fuera de conDatos: los nombres se administran aunque no haya respuestas. -->
-    <div id="bloqueNombres" hidden>
-      <h2>Nombres de la encuesta</h2>
-      <p class="mini">Los cambios aplican a quien abra la encuesta desde ahora. Renombrar conserva
-        los votos que ya tenía. Ocultar lo quita de la encuesta sin perder sus resultados.</p>
-      <form class="agregar" id="formAgregar">
-        <input type="text" id="nuevoNombre" placeholder="Nombre nuevo" maxlength="30" autocomplete="off">
-        <button class="btn-mini" type="submit">Agregar</button>
-      </form>
-      <div id="listaNombres" class="nombres"></div>
-    </div>
-
-    <!-- También fuera de conDatos: sirve justo cuando la base está vacía. -->
-    <div id="bloqueImportar" hidden>
-      <h2>Importar respuestas</h2>
-      <p class="mini">Sube el CSV que bajaste de esta página para pasar las respuestas a una base
-        nueva. Las que ya estén no se duplican. Si el archivo trae un nombre que la lista no tiene,
-        se agrega oculto para que sus votos cuenten.</p>
-      <form class="agregar" id="formImportar">
-        <input type="file" id="archivoCsv" accept=".csv,text/csv">
-        <button class="btn-mini" type="submit">Importar</button>
-      </form>
-      <p class="mini" id="importarMsg"></p>
-    </div>
+    </section>
   </div>
 </div>
 
@@ -1749,6 +1794,54 @@ function insignia(p) {
     return el;
   }
 
+  /* --- pestañas: una sección a la vez; la elegida queda en la dirección (#nombres) --- */
+  var PANELES = ['resumen', 'nombres', 'respuestas', 'ajustes'];
+  var panelActual = PANELES.indexOf(location.hash.slice(1)) !== -1 ? location.hash.slice(1) : 'resumen';
+  var hayDatos = false;
+
+  function mostrarPanel(p, quieto) {
+    if (PANELES.indexOf(p) === -1) p = 'resumen';
+    panelActual = p;
+    PANELES.forEach(function (k) {
+      $('panel-' + k).hidden = k !== p || (!hayDatos && k !== 'ajustes');
+      document.querySelector('#pestanas [data-p="' + k + '"]')
+        .setAttribute('aria-selected', k === p ? 'true' : 'false');
+    });
+    $('sinDatos').hidden = hayDatos || p === 'ajustes';
+    try { history.replaceState(null, '', location.pathname + location.search + '#' + p); } catch (e) {}
+    if (!quieto) window.scrollTo(0, 0);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#pestanas [data-p]'), function (b) {
+    b.addEventListener('click', function () { mostrarPanel(b.getAttribute('data-p')); });
+  });
+
+  // Del ranking a la tarjeta de ese nombre, ya abierta.
+  function abrirNombre(nombre) {
+    mostrarPanel('nombres', true);
+    var tarjetas = document.querySelectorAll('#porNombre .nombre-card');
+    for (var k = 0; k < tarjetas.length; k++) {
+      if (tarjetas[k].getAttribute('data-n') === nombre) {
+        tarjetas[k].open = true;
+        tarjetas[k].scrollIntoView({ block: 'start' });
+        return;
+      }
+    }
+  }
+
+  function donde(lugar) {
+    return lugar === 1 ? 'era su #1' : lugar ? 'lo tenía en lugar ' + lugar : 'no estaba en su podio';
+  }
+
+  // Los números de un nombre en una línea; lo que vale cero no se dice.
+  function lineaNombre(t) {
+    var partes = [t.cobertura + '% lo eligió'];
+    if (t.primeros) partes.push(plural(t.primeros, 'primer lugar', 'primeros lugares'));
+    if (t.finalistas) partes.push(plural(t.finalistas, 'voto de finalista', 'votos de finalista'));
+    if (t.descartes) partes.push(plural(t.descartes, 'descarte', 'descartes'));
+    partes.push('lo vieron ' + (typeof t.vistos === 'number' ? t.vistos : '—'));
+    return partes.join(' · ');
+  }
+
   function pintar(R) {
     $('topPts').textContent = R.top;
     var total = typeof R.total === 'number' ? R.total : R.respuestas;
@@ -1762,97 +1855,62 @@ function insignia(p) {
     pintarNombres(R.candidatos || [], R.tabla || []);
     $('bloqueImportar').hidden = false;
 
-    $('sinDatos').hidden = true;
-    $('conDatos').hidden = true;
-    if (!total) {
-      $('sinDatos').textContent = R.filtro
-        ? 'No hay respuestas de ese grupo.'
-        : 'Todavía no llega ninguna respuesta. Comparte el link y vuelve aquí.';
-      $('sinDatos').hidden = false;
-      return;
-    }
-    $('conDatos').hidden = false;
-    $('bloqueDescartes').hidden = true;
-    $('bloqueMemoria').hidden = true;
-    $('bloqueLibres').hidden = true;
-    $('bloqueFinal').hidden = true;
-    $('bloqueSugerencias').hidden = true;
-    $('memoriaCorrectos').hidden = true;
-
     // El mismo permiso que abrió esta página sirve para bajar el archivo.
     var bajar = $('bajarCsv');
     bajar.href = '/api/csv?clave=' + encodeURIComponent(clave);
     bajar.setAttribute('download', 'respuestas.csv');
     bajar.hidden = false;
 
+    hayDatos = !!total;
+    $('sinDatos').textContent = R.filtro
+      ? 'No hay respuestas de ese grupo.'
+      : 'Todavía no llega ninguna respuesta. Comparte el link y vuelve aquí.';
+    if (!hayDatos) { mostrarPanel(panelActual, true); return; }
+
     var tabla = R.tabla || [];
     var ganador = activas ? tabla[0] : null;
     var segundo = activas ? tabla[1] : null;
     var memoria = R.memoria || { intentos: 0, aciertos: 0, fallos: [], lista: [] };
-    var listaMemoria = memoria.lista || [];
-    var fallosMemoria = memoria.fallos || listaMemoria.filter(function (m) { return !m.acierto; });
-    var aciertosMemoria = listaMemoria.filter(function (m) { return m.acierto; });
+    var fallosMemoria = memoria.fallos || [];
     var tasaMemoria = memoria.intentos ? memoria.aciertos / memoria.intentos : 0;
     var masDescartado = activas
       ? tabla.reduce(function (max, t) {
           return !max || (t.descartes || 0) > (max.descartes || 0) ? t : max;
         }, null)
       : null;
+    var fin = R.final || { contestaron: 0, mismos: 0, cambios: [] };
+    var conVotos = tabla.filter(function (t) { return t.finalistas; })
+      .sort(function (x, y) { return y.finalistas - x.finalistas; });
+    var favFinal = conVotos[0] || null;
 
+    /* ---------- resumen: cuatro cifras ---------- */
     var metricas = limpiar('metricas');
-    metricas.appendChild(kpi(
-      'Respuestas',
-      activas + ' / ' + total,
-      excluidas ? excluidas + ' fuera del cálculo y del CSV' : 'Todas cuentan en resultados',
-      excluidas ? 'alerta' : 'fuerte'
-    ));
-    metricas.appendChild(kpi(
-      'Ganador',
-      ganador ? ganador.nombre : 'Sin datos',
-      ganador ? ganador.promedio.toFixed(2) + ' promedio · ' + ganador.cobertura + '% lo eligió' : '',
-      'fuerte'
-    ));
-    metricas.appendChild(kpi(
-      'Segundo',
-      segundo ? segundo.nombre : 'Sin datos',
-      ganador && segundo ? 'A ' + (ganador.promedio - segundo.promedio).toFixed(2) + ' de promedio del primero' : ''
-    ));
-    metricas.appendChild(kpi(
-      'Memoria',
-      memoria.intentos ? pct(tasaMemoria) : 'Sin datos',
-      memoria.intentos ? memoria.aciertos + ' de ' + memoria.intentos + ' escribieron bien su favorito' : 'Aún sin intentos',
-      memoria.intentos && tasaMemoria < 0.7 ? 'alerta' : ''
-    ));
-    metricas.appendChild(kpi(
-      'Más descartado',
-      masDescartado && masDescartado.descartes ? masDescartado.nombre : 'Sin foco',
-      masDescartado && masDescartado.descartes ? plural(masDescartado.descartes, 'descarte', 'descartes') : 'Nadie concentra rechazos',
-      masDescartado && masDescartado.descartes ? 'alerta' : ''
-    ));
+    metricas.appendChild(kpi('A ciegas va ganando', ganador ? ganador.nombre : 'Sin datos',
+      ganador ? ganador.promedio.toFixed(2) + ' de promedio · ' + ganador.cobertura + '% lo eligió' : '', 'fuerte'));
+    if (fin.contestaron && favFinal) {
+      metricas.appendChild(kpi('Ya sabiendo de qué es', favFinal.nombre,
+        favFinal.finalistas + ' de ' + plural(fin.contestaron, 'voto', 'votos'), 'fuerte'));
+    } else {
+      metricas.appendChild(kpi('Segundo a ciegas', segundo ? segundo.nombre : 'Sin datos',
+        ganador && segundo ? 'a ' + (ganador.promedio - segundo.promedio).toFixed(2) + ' del primero' : ''));
+    }
+    metricas.appendChild(kpi('Memoria', memoria.intentos ? pct(tasaMemoria) : 'Sin datos',
+      memoria.intentos ? memoria.aciertos + ' de ' + memoria.intentos + ' escribieron bien su #1' : 'Aún sin intentos',
+      memoria.intentos && tasaMemoria < 0.7 ? 'alerta' : ''));
+    metricas.appendChild(kpi('Más descartado',
+      masDescartado && masDescartado.descartes ? masDescartado.nombre : 'Nadie',
+      masDescartado && masDescartado.descartes ? plural(masDescartado.descartes, 'descarte', 'descartes') : 'Sin rechazos claros',
+      masDescartado && masDescartado.descartes ? 'alerta' : ''));
 
-    var lectura = limpiar('lecturaRapida');
     var ideas = [];
     if (ganador) {
       ideas.push('<li><b>' + esc(ganador.nombre) + '</b> va arriba con ' +
         ganador.promedio.toFixed(2) + ' de promedio y ' + plural(ganador.primeros, 'primer lugar', 'primeros lugares') + '.</li>');
     }
     if (ganador && segundo) {
-      ideas.push('<li>La distancia contra <b>' + esc(segundo.nombre) + '</b> es de ' +
+      ideas.push('<li>Le sigue <b>' + esc(segundo.nombre) + '</b>, a ' +
         (ganador.promedio - segundo.promedio).toFixed(2) + ' de promedio.</li>');
     }
-    if (memoria.intentos) {
-      ideas.push('<li>Memoria: ' + esc(pct(tasaMemoria)) + ' de acierto; ' +
-        plural(fallosMemoria.length, 'persona falló', 'personas fallaron') + ' al escribir su favorito.</li>');
-    }
-    if (masDescartado && masDescartado.descartes) {
-      ideas.push('<li>Atención con <b>' + esc(masDescartado.nombre) + '</b>: concentra ' +
-        plural(masDescartado.descartes, 'descarte', 'descartes') + '.</li>');
-    }
-    // Segunda vuelta: el nombre que eligen ya sabiendo de qué es el proyecto.
-    var fin = R.final || { contestaron: 0, mismos: 0, cambios: [] };
-    var conVotos = tabla.filter(function (t) { return t.finalistas; })
-      .sort(function (x, y) { return y.finalistas - x.finalistas; });
-    var favFinal = conVotos[0] || null;
     if (fin.contestaron && favFinal) {
       ideas.push('<li>Ya sabiendo de qué es: <b>' + esc(favFinal.nombre) + '</b> se lleva ' +
         favFinal.finalistas + ' de ' + plural(fin.contestaron, 'voto', 'votos') + '; ' +
@@ -1862,164 +1920,150 @@ function insignia(p) {
           esc(favFinal.nombre) + '</b>.</li>');
       }
     }
-    if (!activas && total) {
-      ideas.push('<li>Todas las respuestas están excluidas. Restaura alguna para volver a calcular resultados.</li>');
+    if (memoria.intentos && fallosMemoria.length) {
+      ideas.push('<li>Memoria: ' + plural(fallosMemoria.length, 'persona no supo', 'personas no supieron') +
+        ' escribir su favorito.</li>');
     }
-    lectura.innerHTML = '<b>Lectura rápida</b><ul>' + ideas.join('') + '</ul>';
+    if (masDescartado && masDescartado.descartes) {
+      ideas.push('<li>Atención con <b>' + esc(masDescartado.nombre) + '</b>: concentra ' +
+        plural(masDescartado.descartes, 'descarte', 'descartes') + '.</li>');
+    }
+    if (!activas && total) {
+      ideas.push('<li>Todas las respuestas están excluidas. Restaura alguna para volver a calcular.</li>');
+    }
+    $('lecturaRapida').innerHTML = '<b>Lectura rápida</b><ul>' + ideas.join('') + '</ul>';
 
+    /* ---------- resumen: ranking compacto (sin tabla que haya que deslizar) ---------- */
     var tope = tabla.length ? Math.max.apply(null, tabla.map(function (t) { return t.promedio; })) : 1;
     if (!tope) tope = 1;
-    var tb = $('filas');
-    tb.innerHTML = '';
+    var ol = limpiar('ranking');
     tabla.forEach(function (t, i) {
-      var tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td class="num" style="color:var(--muted)">' + (i + 1) + '</td>' +
-        '<td class="nm">' + esc(t.nombre) + (t.activo === false ? '<span class="tag-oculto">oculto</span>' : '') + '</td>' +
-        '<td class="prom">' + t.promedio.toFixed(2) + '</td>' +
-        '<td style="width:120px"><div class="barra" style="width:' +
-          Math.max(2, Math.round((t.promedio / tope) * 110)) + 'px"></div></td>' +
-        '<td class="num">' + t.cobertura + '%</td>' +
-        '<td class="num">' + t.primeros + '</td>' +
-        '<td class="num">' + (t.finalistas || '—') + '</td>' +
-        '<td class="num">' + (t.posMedia === null ? '—' : t.posMedia.toFixed(1)) + '</td>' +
-        '<td class="num' + (t.descartes ? ' malo' : '') + '">' + (t.descartes || '—') + '</td>' +
-        '<td class="num">' + (typeof t.vistos === 'number' ? t.vistos : '—') + '</td>';
-      tb.appendChild(tr);
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'fila-rank' + (t.activo === false ? ' oculto' : '');
+      b.innerHTML =
+        '<span class="pos">' + (i + 1) + '</span>' +
+        '<span class="cuerpo"><span class="nm">' + esc(t.nombre) + '</span>' +
+          (t.activo === false ? '<span class="tag-oculto">oculto</span>' : '') +
+          '<span class="barra-wrap"><span class="barra" style="width:' +
+            Math.max(2, Math.round((t.promedio / tope) * 100)) + '%"></span></span>' +
+          '<span class="det">' + esc(lineaNombre(t)) + '</span></span>' +
+        '<span class="prom">' + t.promedio.toFixed(2) + '</span>';
+      b.addEventListener('click', function () { abrirNombre(t.nombre); });
+      li.appendChild(b);
+      ol.appendChild(li);
     });
 
+    /* ---------- resumen: segunda vuelta ---------- */
+    $('bloqueFinal').hidden = !fin.contestaron;
     if (fin.contestaron) {
-      $('bloqueFinal').hidden = false;
       $('finalNota').textContent =
-        'Después de la prueba de memoria se les dice de qué es el proyecto y eligen un solo nombre ' +
-        'entre todos. ' + (fin.contestaron < activas
-          ? 'Contestaron esta parte ' + fin.contestaron + ' de ' + activas +
-            ' respuestas; las demás llegaron antes de que existiera.'
-          : 'La contestaron todas las respuestas.') +
-        ' Los nombres que dicen lo que hace el producto suelen ganar aquí: tómalo como una señal más.';
-
+        'Después de la prueba de memoria se les dice de qué es el proyecto y eligen un solo nombre. ' +
+        (fin.contestaron < activas
+          ? 'Contestaron esta parte ' + fin.contestaron + ' de ' + activas + '; las demás llegaron antes.'
+          : 'La contestaron todas.') +
+        ' Los nombres que dicen lo que hace el producto suelen ganar aquí: es una señal más, no el veredicto.';
       var fr = limpiar('finalResumen');
-      var tasaMismo = fin.mismos / fin.contestaron;
-      fr.appendChild(kpi('Finalista', favFinal ? favFinal.nombre : 'Sin datos',
-        favFinal ? favFinal.finalistas + ' de ' + plural(fin.contestaron, 'voto', 'votos') : '', 'fuerte'));
-      fr.appendChild(kpi('Se quedó con su #1', pct(tasaMismo), fin.mismos + ' de ' + fin.contestaron));
-      fr.appendChild(kpi('Cambió', String(fin.cambios.length),
-        plural(fin.cambios.filter(function (c) { return !c.lugar; }).length,
-               'eligió', 'eligieron') + ' algo fuera de su podio',
-        fin.cambios.length ? 'alerta' : ''));
-
-      var donde = function (lugar) {
-        return lugar === 1 ? 'era su #1' : lugar ? 'lo tenía en lugar ' + lugar : 'no estaba en su podio';
-      };
-      var fg = limpiar('finalGrupos');
-      conVotos.forEach(function (t, i) {
-        var g = grupo(t.nombre, plural(t.finalistas, 'voto', 'votos'), i === 0);
-        var body = g.querySelector('.grupo-body');
-        t.razones.forEach(function (z) {
-          body.appendChild(frase(z.texto ? esc(z.texto) : '<i>Sin razón</i>',
-                                 z.quien + ' · ' + donde(z.lugar), false));
-        });
-        fg.appendChild(g);
-      });
-
+      fr.appendChild(kpi('Se quedó con su #1', pct(fin.mismos / fin.contestaron), fin.mismos + ' de ' + fin.contestaron));
+      fr.appendChild(kpi('Cambió de favorito', String(fin.cambios.length),
+        plural(fin.cambios.filter(function (c) { return !c.lugar; }).length, 'eligió', 'eligieron') +
+        ' algo fuera de su podio', fin.cambios.length ? 'alerta' : ''));
       var fc = limpiar('finalCambios');
       if (fin.cambios.length) {
-        var gc = grupo('Cambiaron de favorito', plural(fin.cambios.length, 'caso', 'casos'), true);
+        var gc = grupo('Quién cambió y a cuál', plural(fin.cambios.length, 'caso', 'casos'), false);
         var bc = gc.querySelector('.grupo-body');
         fin.cambios.forEach(function (c) {
-          bc.appendChild(frase(
-            'De <b>' + esc(c.de || '—') + '</b> a <b>' + esc(c.a) + '</b>' +
-              (c.texto ? ': ' + esc(c.texto) : ''),
-            c.quien + ' · ' + donde(c.lugar), false));
+          bc.appendChild(frase('De <b>' + esc(c.de || '—') + '</b> a <b>' + esc(c.a) + '</b>' +
+            (c.texto ? ': ' + esc(c.texto) : ''), c.quien + ' · ' + donde(c.lugar), false));
         });
         fc.appendChild(gc);
       }
     }
 
+    /* ---------- resumen: comentarios, plegados ---------- */
+    var cc = limpiar('comentarios');
     if (R.sugerencias && R.sugerencias.length) {
-      $('bloqueSugerencias').hidden = false;
-      var cs = limpiar('sugerencias');
-      var gs = grupo('Ideas de nombre', plural(R.sugerencias.length, 'idea', 'ideas'), true);
+      var gs = grupo('Nombres que sugirieron', plural(R.sugerencias.length, 'idea', 'ideas'), false);
       var bs = gs.querySelector('.grupo-body');
-      R.sugerencias.forEach(function (s) {
-        bs.appendChild(frase('<b>' + esc(s.texto) + '</b>', s.quien, false));
-      });
-      cs.appendChild(gs);
+      R.sugerencias.forEach(function (x) { bs.appendChild(frase('<b>' + esc(x.texto) + '</b>', x.quien, false)); });
+      cc.appendChild(gs);
     }
-
-    var cf = limpiar('frases');
-    tabla.forEach(function (t) {
-      if (!t.frases || !t.frases.length) return;
-      var g = grupo(t.nombre, plural(t.frases.length, 'frase', 'frases'), t === ganador);
-      var body = g.querySelector('.grupo-body');
-      t.frases.forEach(function (f) {
-        body.appendChild(frase(esc(f.texto), f.quien + ' · lo puso en lugar ' + f.lugar, false));
-      });
-      cf.appendChild(g);
-    });
-
-    // Quién descartó qué, y por qué.
-    var cd = limpiar('descartes');
-    var hayDescartes = false;
-    tabla.forEach(function (t) {
-      if (!t.quejas || !t.quejas.length) return;
-      hayDescartes = true;
-      var g = grupo(t.nombre, plural(t.quejas.length, 'descarte', 'descartes'), true);
-      var body = g.querySelector('.grupo-body');
-      t.quejas.forEach(function (q) {
-        body.appendChild(frase(esc(q.texto), q.quien, true));
-      });
-      cd.appendChild(g);
-    });
-    if (hayDescartes) $('bloqueDescartes').hidden = false;
-
-    // Prueba de memoria: lo que importa son los que se escribieron mal.
-    if (memoria && memoria.intentos) {
-      $('bloqueMemoria').hidden = false;
-      var mr = limpiar('memoriaResumen');
-      mr.appendChild(kpi('Aciertos', pct(tasaMemoria), memoria.aciertos + ' de ' + memoria.intentos, tasaMemoria < 0.7 ? 'alerta' : 'fuerte'));
-      mr.appendChild(kpi('Fallos', String(fallosMemoria.length), 'Personas que no lo escribieron igual', fallosMemoria.length ? 'alerta' : ''));
-      mr.appendChild(kpi('Intentos', String(memoria.intentos), 'Respuestas con prueba de memoria'));
-
-      var cm = limpiar('memoriaFallos');
-      if (fallosMemoria.length) {
-        var gf = grupo('Fallos de memoria', plural(fallosMemoria.length, 'caso', 'casos'), true);
-        var bf = gf.querySelector('.grupo-body');
-        fallosMemoria.forEach(function (f) {
-          bf.appendChild(frase(
-            'Escribió <b>' + esc(f.escrito) + '</b> en vez de <b>' + esc(f.objetivo) + '</b>',
-            f.quien,
-            true
-          ));
-        });
-        cm.appendChild(gf);
-      } else {
-        cm.appendChild(frase('Nadie falló al escribir su favorito de memoria.', '', false));
-      }
-
-      var corr = $('memoriaCorrectos');
-      var ca = limpiar('memoriaAciertos');
-      if (aciertosMemoria.length) {
-        $('memoriaCorrectosConteo').textContent = plural(aciertosMemoria.length, 'caso', 'casos');
-        corr.hidden = false;
-        aciertosMemoria.forEach(function (f) {
-          ca.appendChild(frase('Escribió <b>' + esc(f.escrito) + '</b>', f.quien, false));
-        });
-      }
-    }
-
     if (R.libres && R.libres.length) {
-      $('bloqueLibres').hidden = false;
-      var libres = limpiar('libres');
-      var gl = grupo('Comentarios libres', plural(R.libres.length, 'comentario', 'comentarios'), R.libres.length <= 8);
+      var gl = grupo('Comentarios libres', plural(R.libres.length, 'comentario', 'comentarios'), false);
       var bl = gl.querySelector('.grupo-body');
-      R.libres.forEach(function (l) {
-        bl.appendChild(frase(esc(l.texto), l.quien, false));
-      });
-      libres.appendChild(gl);
+      R.libres.forEach(function (l) { bl.appendChild(frase(esc(l.texto), l.quien, false)); });
+      cc.appendChild(gl);
     }
+    $('bloqueComentarios').hidden = !cc.children.length;
+
+    /* ---------- por nombre: todo lo de cada nombre en una tarjeta ---------- */
+    var abiertos = {};
+    Array.prototype.forEach.call(document.querySelectorAll('#porNombre .nombre-card[open]'), function (d) {
+      abiertos[d.getAttribute('data-n')] = true;
+    });
+    var pn = limpiar('porNombre');
+    tabla.forEach(function (t, i) { pn.appendChild(tarjetaNombre(t, i, abiertos[t.nombre])); });
 
     pintarRespuestas(R.respuestasIndividuales || []);
+    mostrarPanel(panelActual, true);
+  }
+
+  function tarjetaNombre(t, i, abierto) {
+    var det = document.createElement('details');
+    det.className = 'grupo nombre-card' + (t.activo === false ? ' oculto' : '');
+    det.setAttribute('data-n', t.nombre);
+    det.open = !!abierto;
+    det.innerHTML =
+      '<summary><span class="pos">' + (i + 1) + '</span><b>' + esc(t.nombre) + '</b>' +
+        (t.activo === false ? '<span class="tag-oculto">oculto</span>' : '') +
+        '<span class="pill">' + t.promedio.toFixed(2) + '</span></summary>' +
+      '<div class="grupo-body"><p class="det-linea">' + esc(lineaNombre(t)) + '</p></div>';
+    var body = det.querySelector('.grupo-body');
+    var algo = false;
+
+    function bloque(titulo, elementos) {
+      if (!elementos.length) return;
+      algo = true;
+      var sec = seccion(titulo);
+      elementos.forEach(function (el) { sec.appendChild(el); });
+      body.appendChild(sec);
+    }
+
+    // Las respuestas iguales se juntan: «una cafetería ×3» en vez de tres tarjetas.
+    var juntas = [], porTexto = {};
+    (t.frases || []).forEach(function (f) {
+      var k = llano(f.texto).replace(/[.!¡¿?]+$/, '');
+      if (!porTexto[k]) { porTexto[k] = { texto: f.texto, quienes: [] }; juntas.push(porTexto[k]); }
+      porTexto[k].quienes.push(f.quien + ' (#' + f.lugar + ')');
+    });
+    juntas.sort(function (a, b) { return b.quienes.length - a.quienes.length; });
+    bloque('Qué le suena que vende', juntas.map(function (g) {
+      return frase(esc(g.texto) + (g.quienes.length > 1 ? '<span class="veces">×' + g.quienes.length + '</span>' : ''),
+                   g.quienes.join(', '), false);
+    }));
+    bloque('Lo escogieron de finalista', (t.razones || []).map(function (z) {
+      return frase(z.texto ? esc(z.texto) : '<i>Sin razón</i>', z.quien + ' · ' + donde(z.lugar), false);
+    }));
+    bloque('Por qué lo descartaron', (t.quejas || []).map(function (q) {
+      return frase(esc(q.texto), q.quien, true);
+    }));
+    if (t.memIntentos) {
+      var bien = t.memIntentos - (t.memFallos || []).length;
+      var resumenMem = document.createElement('p');
+      resumenMem.className = 'det-linea';
+      resumenMem.textContent = bien + ' de ' + t.memIntentos + ' lo escribieron bien de memoria.';
+      bloque('De memoria (era su #1)', [resumenMem].concat((t.memFallos || []).map(function (m) {
+        return frase('Escribió <b>' + esc(m.escrito) + '</b>', m.quien, true);
+      })));
+    }
+    if (!algo) {
+      var nada = document.createElement('p');
+      nada.className = 'det-linea';
+      nada.textContent = 'Nadie lo ha escogido ni descartado todavía.';
+      body.appendChild(nada);
+    }
+    return det;
   }
 
   var BOTE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
@@ -2045,8 +2089,12 @@ function insignia(p) {
     return d;
   }
 
-  // Todo lo que contestó una persona, en el orden en que lo contestó.
+  // Todo lo que contestó una persona, plegado: arriba solo quién, cuándo y su #1.
   function pintarRespuestas(lista) {
+    var abiertas = {};
+    Array.prototype.forEach.call(document.querySelectorAll('#respuestas .resp[open]'), function (d) {
+      abiertas[d.getAttribute('data-id')] = true;
+    });
     var c = limpiar('respuestas');
     if (!lista.length) {
       c.appendChild(frase('No hay respuestas individuales para mostrar.', '', false));
@@ -2056,38 +2104,36 @@ function insignia(p) {
     lista.forEach(function (r) {
       var orden = r.orden || [];
       var porque = r.porque || [];
-      var card = document.createElement('article');
+      var card = document.createElement('details');
       card.className = 'resp' + (r.excluida ? ' excluida' : '');
+      card.setAttribute('data-id', r.id);
+      card.open = !!abiertas[r.id];
 
-      var cab = document.createElement('div');
+      var resumen = '★ ' + (orden[0] || '—') + (r.finalista ? ' → finalista ' + r.finalista : '');
+      var cab = document.createElement('summary');
       cab.className = 'resp-cab';
-      var info = document.createElement('div');
-      info.innerHTML =
-        '<h3>' + esc(r.quien || 'Anónimo') +
+      cab.innerHTML =
+        '<div><h3>' + esc(r.quien || 'Anónimo') +
           '<span class="tag">' + (r.excluida ? 'Excluida' : 'Activa') + '</span></h3>' +
-        '<div class="meta">#' + esc(r.id) + ' · ' + esc(fecha(r.creado)) +
-          (r.correo ? ' · ' + esc(r.correo) : '') + '</div>';
-      var bote = document.createElement('button');
-      bote.type = 'button';
-      bote.className = 'btn-borrar';
-      bote.innerHTML = BOTE;
-      bote.title = 'Borrar para siempre';
-      bote.setAttribute('aria-label', 'Borrar la respuesta de ' + (r.quien || 'esta persona'));
-      bote.addEventListener('click', function () { borrarRespuesta(r, bote); });
-      cab.appendChild(info);
-      cab.appendChild(bote);
+          '<div class="linea-r">' + esc(resumen) + '</div>' +
+          '<div class="meta">#' + esc(r.id) + ' · ' + esc(fecha(r.creado)) +
+            (r.ocupacionNombre ? ' · ' + esc(r.ocupacionNombre) : '') + '</div></div>';
       card.appendChild(cab);
+
+      var cuerpo = document.createElement('div');
+      cuerpo.className = 'resp-cuerpo';
 
       var ocup = seccion('A qué se dedica');
       ocup.appendChild(dato(r.ocupacionNombre || 'Sin dato', r.ocupacionDetalle,
         r.ocupacionNombre ? '' : 'contestó antes de que existiera la pregunta'));
-      if (r.aceptaInfo) {
+      if (r.correo || r.aceptaInfo) {
         var ok = document.createElement('span');
         ok.className = 'dc';
-        ok.innerHTML = '<span class="bien">Acepta</span> que le mandes información';
+        ok.innerHTML = (r.correo ? esc(r.correo) : '') +
+          (r.aceptaInfo ? (r.correo ? ' · ' : '') + '<span class="bien">Acepta</span> que le mandes información' : '');
         ocup.appendChild(ok);
       }
-      card.appendChild(ocup);
+      cuerpo.appendChild(ocup);
 
       var top = seccion('Su top y qué cree que vende');
       if (!orden.length) top.appendChild(dato('Sin ranking', '', ''));
@@ -2101,42 +2147,40 @@ function insignia(p) {
         fila.appendChild(dato(n, porque[p], 'sin describir'));
         top.appendChild(fila);
       });
-      card.appendChild(top);
+      cuerpo.appendChild(top);
 
       if (r.peor) {
         var des = seccion('El que descarta');
         des.appendChild(dato(r.peor, r.peorPorque, 'sin razón'));
-        card.appendChild(des);
+        cuerpo.appendChild(des);
       }
 
       if (r.memoria) {
         var mem = seccion('De memoria');
-        var memoriaOk = orden[0] &&
-          llano(r.memoria) === llano(orden[0]);
+        var memoriaOk = orden[0] && llano(r.memoria) === llano(orden[0]);
         var dm = document.createElement('div');
         dm.innerHTML = '<span class="nm">' + esc(r.memoria) + '</span>' +
           '<span class="dc">' + (memoriaOk
             ? '<span class="bien">Bien</span> · coincide con su #1'
             : '<span class="mal">Falló</span> · su #1 es ' + esc(orden[0] || '—')) + '</span>';
         mem.appendChild(dm);
-        card.appendChild(mem);
+        cuerpo.appendChild(mem);
       }
 
       if (r.finalista) {
-        var fin = seccion('Ya sabiendo de qué es');
-        var antes = orden.map(function (n) { return String(n).toLowerCase(); })
-                         .indexOf(String(r.finalista).toLowerCase());
+        var fsec = seccion('Ya sabiendo de qué es');
+        var antes = orden.map(llano).indexOf(llano(r.finalista));
         var rel = antes === 0 ? 'El mismo que su #1'
                 : antes > 0   ? 'Antes lo tenía en lugar ' + (antes + 1)
                               : 'No estaba en su podio';
-        fin.appendChild(dato(r.finalista, rel + (r.finalistaPorque ? ' · ' + r.finalistaPorque : ''), ''));
-        card.appendChild(fin);
+        fsec.appendChild(dato(r.finalista, rel + (r.finalistaPorque ? ' · ' + r.finalistaPorque : ''), ''));
+        cuerpo.appendChild(fsec);
       }
 
       if (r.sugerencia) {
         var sug = seccion('Su idea de nombre');
         sug.appendChild(dato(r.sugerencia, '', ''));
-        card.appendChild(sug);
+        cuerpo.appendChild(sug);
       }
 
       if (r.libre) {
@@ -2145,7 +2189,7 @@ function insignia(p) {
         dl.className = 'dc';
         dl.textContent = r.libre;
         lib.appendChild(dl);
-        card.appendChild(lib);
+        cuerpo.appendChild(lib);
       }
 
       var pie = document.createElement('div');
@@ -2154,12 +2198,19 @@ function insignia(p) {
       btn.type = 'button';
       btn.className = 'btn-mini' + (r.excluida ? '' : ' alerta');
       btn.textContent = r.excluida ? 'Restaurar' : 'Excluir';
-      btn.addEventListener('click', function () {
-        cambiarExclusion(r, !r.excluida, btn);
-      });
+      btn.addEventListener('click', function () { cambiarExclusion(r, !r.excluida, btn); });
+      var bote = document.createElement('button');
+      bote.type = 'button';
+      bote.className = 'btn-borrar';
+      bote.innerHTML = BOTE;
+      bote.title = 'Borrar para siempre';
+      bote.setAttribute('aria-label', 'Borrar la respuesta de ' + (r.quien || 'esta persona'));
+      bote.addEventListener('click', function () { borrarRespuesta(r, bote); });
       pie.appendChild(btn);
-      card.appendChild(pie);
+      pie.appendChild(bote);
+      cuerpo.appendChild(pie);
 
+      card.appendChild(cuerpo);
       c.appendChild(card);
     });
   }
