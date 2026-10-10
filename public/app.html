@@ -601,6 +601,9 @@ td.num.malo{color:var(--alerta);font-weight:700}
 .fila-rank .prom{font-weight:700;font-size:17px;color:var(--accent-texto);font-variant-numeric:tabular-nums}
 .como{margin-top:10px}
 .como summary{cursor:pointer;color:var(--accent-texto);font-size:13.5px;font-weight:700}
+.como-texto{background:var(--surface);border:1px solid var(--line-soft);border-radius:10px;padding:4px 14px;margin-top:8px}
+.como-texto p{margin:10px 0;line-height:1.5}
+.como-texto b{color:var(--ink)}
 
 /* ---------- por nombre ---------- */
 .nombre-card{scroll-margin-top:72px}
@@ -830,10 +833,8 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
       <ol class="ranking" id="ranking"></ol>
       <details class="como">
         <summary>¿Cómo se calcula?</summary>
-        <p class="mini">El número de la derecha es el promedio: puntos entre las personas que vieron
-          ese nombre. Cada 1er lugar vale <span id="topPts"></span> puntos y el último vale 1.
-          «Lo eligió» es el porcentaje de quienes lo vieron que lo metió a su top. Ojo con los
-          nombres que vio poca gente.</p>
+        <!-- Se llena con el tamaño real del podio (R.top), para que los números siempre cuadren. -->
+        <div class="mini como-texto" id="comoTexto"></div>
       </details>
 
       <div id="bloqueFinal" hidden>
@@ -1843,7 +1844,7 @@ function insignia(p) {
   }
 
   function pintar(R) {
-    $('topPts').textContent = R.top;
+    pintarComo(R.top || 5);
     var total = typeof R.total === 'number' ? R.total : R.respuestas;
     var activas = typeof R.activas === 'number' ? R.activas : R.respuestas;
     var excluidas = R.excluidas || 0;
@@ -2007,6 +2008,26 @@ function insignia(p) {
 
     pintarRespuestas(R.respuestasIndividuales || []);
     mostrarPanel(panelActual, true);
+  }
+
+  // «¿Cómo se calcula?» con un ejemplo que usa los puntos de verdad.
+  function pintarComo(top) {
+    var ord = function (k) { return k + (k === 1 || k === 3 ? 'er' : 'º'); };
+    var lugares = [];
+    for (var k = 1; k <= top; k++) lugares.push(ord(k) + ' lugar = ' + plural(top - k + 1, 'punto', 'puntos'));
+    var suma = 2 * top + (top - 2);
+    $('comoTexto').innerHTML =
+      '<p><b>1. Puntos.</b> Cada persona arma su podio de ' + top + ' nombres: ' + esc(lugares.join(', ')) +
+        '. Si no lo escogió, ese nombre no suma nada.</p>' +
+      '<p><b>2. Promedio.</b> El número de la derecha son los puntos que juntó un nombre, divididos entre ' +
+        'las personas que lo vieron. Ejemplo: 10 personas vieron un nombre, 2 lo pusieron en 1er lugar ' +
+        '(' + (2 * top) + ' puntos) y 1 en 3er lugar (' + (top - 2) + ' puntos). Suma ' + suma + ' puntos ÷ 10 personas = ' +
+        (suma / 10).toFixed(2) + '. Lo más alto posible es ' + top + ': que todos lo pusieran en 1er lugar.</p>' +
+      '<p><b>3. Por qué entre quienes lo vieron.</b> Si agregas un nombre a media encuesta, no lo castiga ' +
+        'que las primeras personas ni lo hayan visto.</p>' +
+      '<p><b>«Lo eligió»</b> es de cada 100 personas que lo vieron, cuántas lo metieron a su podio, en ' +
+        'cualquier lugar.</p>' +
+      '<p><b>Ojo:</b> si a un nombre lo vio poca gente, una sola respuesta le mueve mucho el número.</p>';
   }
 
   function tarjetaNombre(t, i, abierto) {
