@@ -438,6 +438,32 @@ body.parte2 .btn:not(.atras){box-shadow:inset 0 0 0 1px var(--oro-borde)}
 }
 /* La frase que abre la segunda parte: se lee como texto, no como nota al pie. */
 .ayuda.entrada{font-size:16px;color:var(--ink-2)}
+
+/* ---------- contador hacia la meta ---------- */
+.contador{background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;
+  padding:10px 14px 12px;margin:0 0 16px;box-shadow:var(--shadow)}
+.contador[hidden]{display:none}
+.contador p{margin:0 0 8px;font-size:14.5px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.contador-barra{display:block;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.contador-barra i{display:block;height:100%;border-radius:3px;background:var(--accent-texto);transition:width .6s ease}
+.contador.casi{border-color:var(--oro-borde)}
+.contador.casi .contador-barra i{background:var(--oro)}
+
+/* ---------- sorpresa para quien llega a la meta ---------- */
+.especial{text-align:center;background:var(--p2-carta);color:var(--p2-carta-ink);border-radius:16px;
+  padding:28px 22px 30px;margin-bottom:20px;box-shadow:var(--lift);animation:revelar .5s cubic-bezier(.2,.7,.3,1) both}
+.esp-eti{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--oro);margin:0}
+.esp-num{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:96px;line-height:1;
+  margin:6px 0 12px;color:var(--oro);font-variant-numeric:tabular-nums}
+.especial h2{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:28px;line-height:1.15;
+  margin:0 0 10px;color:var(--p2-carta-ink);text-wrap:balance}
+.especial .esp-texto{margin:0;font-size:16.5px;line-height:1.5;color:var(--p2-carta-ink-2)}
+.tu-numero{margin:12px 0 0 !important;font-weight:700;color:var(--ok) !important}
+.confeti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.confeti i{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;opacity:.95;
+  transform:rotate(var(--giro));animation:caer linear forwards}
+@keyframes caer{to{transform:translate(var(--dx),110vh) rotate(calc(var(--giro) + 720deg))}}
+@media (prefers-reduced-motion: reduce){ .especial{animation:none} .contador-barra i{transition:none} }
 .pregunta-final + .ayuda{margin-bottom:16px}
 #finalista{margin-bottom:20px}
 </style>
@@ -572,6 +598,7 @@ td.num.malo{color:var(--alerta);font-weight:700}
 .resp .tag{display:inline-block;border:1px solid var(--line-soft);border-radius:999px;
   padding:2px 8px;font-size:12px;color:var(--muted);margin-left:6px}
 .resp.excluida .tag{color:var(--alerta);border-color:var(--alerta)}
+.resp .tag.tag-meta{background:var(--oro);border-color:var(--oro-borde);color:var(--oro-ink);font-weight:700}
 .btn-mini{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);
   border-radius:9px;padding:9px 12px;font-family:inherit;font-weight:700;cursor:pointer;white-space:nowrap}
 .btn-mini:hover{border-color:var(--accent-texto);color:var(--accent-texto)}
@@ -684,6 +711,10 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
 
     <!-- 1 · elegir -->
     <section class="pantalla" id="p1">
+      <div class="contador" id="contador" hidden>
+        <p id="contador-t"></p>
+        <span class="contador-barra" aria-hidden="true"><i id="contador-i"></i></span>
+      </div>
       <h2 class="pregunta-final" id="p1-pregunta">¿Cuáles son los 5 nombres que más te gustan?</h2>
       <p class="ayuda" data-t="p1Ayuda">Tócalos empezando por tu favorito. Si quieres quitar uno, sólo tócalo otra vez.</p>
       <div class="rejilla" id="rejilla"></div>
@@ -799,9 +830,17 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
 
     <!-- final -->
     <section class="pantalla" id="pf" hidden>
-      <div class="gracias">
+      <!-- Solo para quien llega justo a la meta. -->
+      <div class="especial" id="especial" hidden>
+        <p class="esp-eti" data-t="espEti">Respuesta número</p>
+        <p class="esp-num" id="esp-num">100</p>
+        <h2 id="esp-titulo">¡Eres la persona número 100!</h2>
+        <p class="esp-texto" data-t="espTexto">Con tu respuesta llegué a la meta. De verdad, muchas gracias por tomarte el tiempo.</p>
+      </div>
+      <div class="gracias" id="gracias">
         <h2 data-t="graciasT">¡Gracias!</h2>
         <p data-t="graciasP">¡Tu opinión es muy importante para mí!</p>
+        <p class="tu-numero" id="tu-numero" hidden></p>
       </div>
       <div class="resumen" id="resumen-final"></div>
     </section>
@@ -955,6 +994,8 @@ function insignia(p) {
 
   // La lista vive en el servidor (server.js). Aquí solo se recibe.
   var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [], PROYECTO = [], PROYECTO_EN = [];
+  // Contador hacia la meta: cuántas van al abrir, y qué número le tocó al enviar.
+  var CONTEO = null, META = 100, numeroFinal = 0, festejado = false;
   var LLAVE = 'encuesta-nombres-v1';
 
   /* ---------- idioma: español por omisión; inglés con el selector o abriendo con ?lang=en ---------- */
@@ -1021,7 +1062,14 @@ function insignia(p) {
       nCarga: 'No se pudo cargar la lista de nombres. Recarga la página.',
       mover: 'Mover {0}, lugar {1} de {2}',
       aModoClaro: 'Cambiar a modo claro', aModoOscuro: 'Cambiar a modo oscuro',
-      modoClaro: 'Modo claro', modoOscuro: 'Modo oscuro'
+      modoClaro: 'Modo claro', modoOscuro: 'Modo oscuro',
+      contador: 'Ya van {0} de {1} respuestas',
+      contadorUno: 'Ya van {0} de {1}: ¡la tuya puede ser la número {1}!',
+      contadorLlegamos: '¡Ya llegamos a {0}! Van {1} respuestas.',
+      tuNumero: 'Fuiste la respuesta número {0}.',
+      espEti: 'Respuesta número',
+      espTitulo: '¡Eres la persona número {0}!',
+      espTexto: 'Con tu respuesta llegué a la meta. De verdad, muchas gracias por tomarte el tiempo.'
     },
     en: {
       tituloPagina: 'Help me pick the name',
@@ -1085,7 +1133,14 @@ function insignia(p) {
       nCarga: 'Could not load the list of names. Please reload the page.',
       mover: 'Move {0}, position {1} of {2}',
       aModoClaro: 'Switch to light mode', aModoOscuro: 'Switch to dark mode',
-      modoClaro: 'Light mode', modoOscuro: 'Dark mode'
+      modoClaro: 'Light mode', modoOscuro: 'Dark mode',
+      contador: '{0} of {1} responses so far',
+      contadorUno: '{0} of {1} so far: yours could be number {1}!',
+      contadorLlegamos: 'We reached {0}! {1} responses so far.',
+      tuNumero: 'You were response number {0}.',
+      espEti: 'Response number',
+      espTitulo: 'You are person number {0}!',
+      espTexto: 'Your answer got me to my goal. Thank you so much for taking the time.'
     }
   };
   var LLAVE_IDIOMA = 'encuesta-idioma';
@@ -1560,7 +1615,7 @@ function insignia(p) {
       $('acepta').checked = st.acepta;
       pintarOcupaciones();
     }
-    if (p === PASOS + 1) pintarResumen('resumen-final', false);
+    if (p === PASOS + 1) { pintarResumen('resumen-final', false); pintarFinal(); }
 
     refrescar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1835,6 +1890,9 @@ function insignia(p) {
       el.placeholder = tx(el.getAttribute('data-t-ph'));
     });
     $('p1-pregunta').textContent = tx('p1Pregunta', TOP);
+    pintarContador();
+    $('esp-titulo').textContent = tx('espTitulo', META);
+    if (numeroFinal) $('tu-numero').textContent = tx('tuNumero', numeroFinal);
     // El "#1" de la pregunta de memoria va con la misma estrella del podio.
     var h = $('mem-pregunta');
     var partes = tx('p5Pregunta', '\u0000').split('\u0000');
@@ -1858,8 +1916,54 @@ function insignia(p) {
     if (p === 4) pintarFicha();
     if (p === REVELA) pintarFinalista();
     if (p === 7) { pintarResumen('resumen', true); pintarOcupaciones(); }
-    if (p === PASOS + 1) pintarResumen('resumen-final', false);
+    if (p === PASOS + 1) { pintarResumen('resumen-final', false); pintarFinal(); }
     refrescar();
+  }
+
+  /* ---------- contador hacia la meta y sorpresa para quien llega justo ---------- */
+  function pintarContador() {
+    var c = $('contador');
+    if (CONTEO === null) { c.hidden = true; return; }
+    c.hidden = false;
+    var falta = META - CONTEO;
+    $('contador-t').textContent = falta <= 0 ? tx('contadorLlegamos', META, CONTEO)
+      : falta === 1 ? tx('contadorUno', CONTEO, META)
+      : tx('contador', CONTEO, META);
+    $('contador-i').style.width = Math.max(2, Math.min(100, Math.round(CONTEO / META * 100))) + '%';
+    c.classList.toggle('casi', falta === 1);
+  }
+
+  function pintarFinal() {
+    var especial = !!numeroFinal && numeroFinal === META;
+    $('especial').hidden = !especial;
+    $('gracias').hidden = especial;
+    $('esp-num').textContent = META;
+    $('esp-titulo').textContent = tx('espTitulo', META);
+    $('tu-numero').hidden = !numeroFinal || especial;
+    if (numeroFinal) $('tu-numero').textContent = tx('tuNumero', numeroFinal);
+    if (especial) confeti();
+  }
+
+  function confeti() {
+    if (festejado) return;
+    festejado = true;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var capa = document.createElement('div');
+    capa.className = 'confeti';
+    capa.setAttribute('aria-hidden', 'true');
+    var colores = ['var(--oro)', 'var(--accent)', 'var(--azul)', 'var(--lila)', 'var(--calido)'];
+    for (var k = 0; k < 90; k++) {
+      var q = document.createElement('i');
+      q.style.left = (Math.random() * 100) + '%';
+      q.style.background = colores[k % colores.length];
+      q.style.animationDelay = (Math.random() * 1.2) + 's';
+      q.style.animationDuration = (2.6 + Math.random() * 1.8) + 's';
+      q.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px');
+      q.style.setProperty('--giro', (Math.random() * 360) + 'deg');
+      capa.appendChild(q);
+    }
+    document.body.appendChild(capa);
+    setTimeout(function () { if (capa.parentNode) capa.parentNode.removeChild(capa); }, 6500);
   }
 
   Array.prototype.forEach.call(document.querySelectorAll('.idioma [data-l]'), function (b) {
@@ -1909,7 +2013,9 @@ function insignia(p) {
           return j;
         });
       })
-      .then(function () {
+      .then(function (j) {
+        numeroFinal = (j && j.numero) || 0;
+        if (j && j.meta) META = j.meta;
         try { localStorage.removeItem(LLAVE); } catch (e) {}
         ir(PASOS + 1);
       })
@@ -1930,6 +2036,9 @@ function insignia(p) {
       OCUP = cfg.ocupaciones || [];
       PROYECTO = [].concat(cfg.proyecto || []);
       PROYECTO_EN = [].concat(cfg.proyectoEn || []);
+      if (typeof cfg.conteo === 'number') CONTEO = cfg.conteo;
+      if (cfg.meta) META = cfg.meta;
+      pintarContador();
       $('p1-pregunta').textContent = tx('p1Pregunta', TOP);
       barajar();
       recuperar();
@@ -1954,6 +2063,7 @@ function insignia(p) {
   if (!esResultados) return;
 
   var clave = new URLSearchParams(location.search).get('clave') || '';
+  var metaR = 100;                     // la meta de respuestas; llega con los resultados
   var filtro = '';                     // ocupación que se está viendo; '' = todas
 
   cargarResultados();
@@ -2065,6 +2175,7 @@ function insignia(p) {
     var total = typeof R.total === 'number' ? R.total : R.respuestas;
     var activas = typeof R.activas === 'number' ? R.activas : R.respuestas;
     var excluidas = R.excluidas || 0;
+    metaR = R.meta || metaR;
     $('cuantas').textContent = activas + ' respuesta' + (activas === 1 ? '' : 's') +
       ' activa' + (activas === 1 ? '' : 's') + (excluidas ? ' · ' + excluidas + ' excluida' + (excluidas === 1 ? '' : 's') : '') +
       ' · ' + total + ' total' + (total === 1 ? '' : 'es') + '.';
@@ -2354,7 +2465,8 @@ function insignia(p) {
       cab.innerHTML =
         '<div><h3>' + esc(r.quien || 'Anónimo') +
           '<span class="tag">' + (r.excluida ? 'Excluida' : 'Activa') + '</span>' +
-          (r.idioma === 'en' ? '<span class="tag">En inglés</span>' : '') + '</h3>' +
+          (r.idioma === 'en' ? '<span class="tag">En inglés</span>' : '') +
+          (r.numero && r.numero === metaR ? '<span class="tag tag-meta">La número ' + metaR + '</span>' : '') + '</h3>' +
           '<div class="linea-r">' + esc(resumen) + '</div>' +
           '<div class="meta">#' + esc(r.id) + ' · ' + esc(fecha(r.creado)) +
             (r.ocupacionNombre ? ' · ' + esc(r.ocupacionNombre) : '') + '</div></div>';

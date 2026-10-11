@@ -73,6 +73,8 @@ const PROYECTO_EN = [
 ];
 
 const TOP = 5;                      // cuántos lugares pide
+// La meta de respuestas. A quien le toque justo este número le sale una sorpresa.
+const META = Number(process.env.META_RESPUESTAS) || 100;
 const OBLIGATORIAS = 3;             // cuántas explicaciones son obligatorias
 const CLAVE = process.env.CLAVE_RESULTADOS || 'cambiame';
 
@@ -127,6 +129,8 @@ async function prepararBase() {
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS sugerencia TEXT');
   // En qué idioma contestó: 'es' o 'en'. Vacío en las respuestas de antes del selector.
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS idioma TEXT');
+  // Qué número de respuesta le tocó al enviar (el que vio en su pantalla de gracias).
+  await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS numero INT');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS candidatos (
@@ -147,28 +151,64 @@ async function prepararBase() {
   console.log('[ok] tablas respuestas y candidatos listas');
 }
 
-async function guardar(fila) {
+async function guardar(fila, cliente) {
   if (!pool) {
-    memoria.push({ id: memoriaId++, ...fila, creado: fila.creado || new Date(), excluida: false, excluidaEn: null });
-    return;
+    const id = memoriaId++;
+    memoria.push({ id, ...fila, creado: fila.creado || new Date(), excluida: false, excluidaEn: null });
+    return id;
   }
-  await pool.query(
+  const r = await (cliente || pool).query(
     'INSERT INTO respuestas (quien, correo, orden, porque, peor, peor_porque, memoria, libre, ' +
     'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia, creado, idioma) ' +
-    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::timestamptz, now()),$17)',
+    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::timestamptz, now()),$17) ' +
+    'RETURNING id',
     [fila.quien, fila.correo, JSON.stringify(fila.orden), JSON.stringify(fila.porque),
      fila.peor, fila.peorPorque, fila.memoria, fila.libre,
      fila.ocupacion, fila.ocupacionDetalle, fila.aceptaInfo, JSON.stringify(fila.vistos),
      fila.finalista, fila.finalistaPorque, fila.sugerencia,
      fila.creado ? new Date(fila.creado).toISOString() : null, fila.idioma === 'en' ? 'en' : 'es']
   );
+  return r.rows[0].id;
+}
+
+// Guarda y dice qué número de respuesta le tocó. El candado hace que dos personas
+// que mandan al mismo tiempo no puedan quedar con el mismo número.
+async function registrar(fila) {
+  if (!pool) {
+    const id = await guardar(fila);
+    const numero = memoria.filter(f => !f.excluida && f.id <= id).length;
+    memoria.find(f => f.id === id).numero = numero;
+    return numero;
+  }
+  const cli = await pool.connect();
+  try {
+    await cli.query('BEGIN');
+    await cli.query('SELECT pg_advisory_xact_lock(7231001)');
+    const id = await guardar(fila, cli);
+    const r = await cli.query('SELECT count(*)::int AS n FROM respuestas WHERE NOT excluida AND id <= $1', [id]);
+    const numero = r.rows[0].n;
+    await cli.query('UPDATE respuestas SET numero = $1 WHERE id = $2', [numero, id]);
+    await cli.query('COMMIT');
+    return numero;
+  } catch (err) {
+    await cli.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    cli.release();
+  }
+}
+
+async function contarActivas() {
+  if (!pool) return memoria.filter(f => !f.excluida).length;
+  const r = await pool.query('SELECT count(*)::int AS n FROM respuestas WHERE NOT excluida');
+  return r.rows[0].n;
 }
 
 async function leerTodas() {
   if (!pool) return memoria;
   const r = await pool.query(
     'SELECT id, quien, correo, orden, porque, peor, peor_porque, memoria, libre, creado, excluida, excluida_en, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia, idioma ' +
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia, idioma, numero ' +
     'FROM respuestas ORDER BY id');
   // La base usa snake_case; el resto del código habla camelCase.
   r.rows.forEach(f => {
@@ -409,6 +449,8 @@ function respuestaPublica(f) {
     finalistaPorque: f.finalistaPorque || '',
     sugerencia: f.sugerencia || '',
     idioma: f.idioma === 'en' ? 'en' : 'es',
+    // El número que vio al enviar; las de antes del contador lo calculan por orden de llegada.
+    numero: f.numero || f.numeroCalc || null,
     libre: f.libre || '',
     ocupacion: f.ocupacion || '',
     ocupacionNombre: nombreOcupacion(f.ocupacion),
@@ -432,7 +474,8 @@ app.get('/api/config', async (_req, res) => {
   try {
     const candidatos = (await leerCandidatos()).filter(c => c.activo).map(c => c.nombre);
     res.json({ candidatos, top: TOP, obligatorias: OBLIGATORIAS, ocupaciones: OCUPACIONES,
-               proyecto: PROYECTO, proyectoEn: PROYECTO_EN });
+               proyecto: PROYECTO, proyectoEn: PROYECTO_EN,
+               conteo: await contarActivas(), meta: META });
   } catch (err) {
     console.error('[error] al leer candidatos:', err.message);
     res.status(500).json({ error: 'No se pudo cargar la lista.' });
@@ -510,7 +553,7 @@ app.post('/api/respuesta', async (req, res) => {
     // Qué nombres le aparecieron; si no llega, los visibles en este momento.
     const vistos = [...new Set((Array.isArray(b.vistos) ? b.vistos : []).map(canon).filter(Boolean))];
 
-    await guardar({
+    const numero = await registrar({
       quien,
       correo,
       orden,
@@ -529,7 +572,7 @@ app.post('/api/respuesta', async (req, res) => {
       vistos: vistos.length ? vistos : candidatos.filter(c => c.activo).map(c => c.nombre)
     });
 
-    res.json({ ok: true });
+    res.json({ ok: true, numero, meta: META });
   } catch (err) {
     console.error('[error] al guardar:', err.message);
     res.status(500).json({ error: 'No se pudo guardar. Intenta otra vez.' });
@@ -568,6 +611,8 @@ app.get('/api/resultados', async (req, res) => {
         ? todasSinFiltro.filter(f => (f.idioma === 'en' ? 'en' : 'es') === filtro.slice(7))
         : todasSinFiltro.filter(f => (f.ocupacion || 'sin') === filtro);
     const activas = todas.filter(f => !f.excluida);
+    let n = 0;
+    todasSinFiltro.forEach(f => { if (!f.excluida) f.numeroCalc = ++n; });
 
     res.json({
       ...calcular(activas, candidatos),
@@ -578,6 +623,7 @@ app.get('/api/resultados', async (req, res) => {
       ocupaciones: OCUPACIONES.map(o => ({ id: o.id, nombre: o.nombre })),
       porOcupacion,
       porIdioma,
+      meta: META,
       candidatos: candidatos.map(c => ({ id: c.id, nombre: c.nombre, activo: c.activo, alias: c.alias })),
       respuestasIndividuales: todas.map(respuestaPublica).reverse()
     });
