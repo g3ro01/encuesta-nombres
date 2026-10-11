@@ -26,17 +26,27 @@ const ORIGINALES = [
 
 // A qué se dedica quien contesta. `pregunta` es el detalle opcional que aparece
 // al elegir; sin pregunta, no se pide detalle.
+// `en` es lo que ve quien contesta en inglés; resultados y CSV siempre van en español.
 const OCUPACIONES = [
   { id: 'negocio',       nombre: 'Dueño/a de negocio',          pregunta: '¿De qué es tu negocio o qué vendes?',
-    ejemplo: 'Por ejemplo: una estética, ropa por Instagram, un taller…' },
+    ejemplo: 'Por ejemplo: una estética, ropa por Instagram, un taller…',
+    en: { nombre: 'Business owner', pregunta: 'What is your business, or what do you sell?',
+          ejemplo: 'For example: a beauty salon, clothes on Instagram, a repair shop…' } },
   { id: 'empleado',      nombre: 'Empleado/a',                  pregunta: '¿En qué trabajas?',
-    ejemplo: 'Por ejemplo: ventas en una farmacéutica' },
+    ejemplo: 'Por ejemplo: ventas en una farmacéutica',
+    en: { nombre: 'Employee', pregunta: 'What do you do for work?',
+          ejemplo: 'For example: sales at a pharmaceutical company' } },
   { id: 'independiente', nombre: 'Profesionista independiente', pregunta: '¿Cuál es tu profesión?',
-    ejemplo: 'Por ejemplo: contadora, diseñador, abogada' },
-  { id: 'hogar',         nombre: 'Ama/o de casa',               pregunta: '', ejemplo: '' },
+    ejemplo: 'Por ejemplo: contadora, diseñador, abogada',
+    en: { nombre: 'Self-employed professional', pregunta: 'What is your profession?',
+          ejemplo: 'For example: accountant, designer, lawyer' } },
+  { id: 'hogar',         nombre: 'Ama/o de casa',               pregunta: '', ejemplo: '',
+    en: { nombre: 'Homemaker', pregunta: '', ejemplo: '' } },
   { id: 'estudiante',    nombre: 'Estudiante',                  pregunta: '¿Qué estudias?',
-    ejemplo: 'Por ejemplo: administración' },
-  { id: 'otro',          nombre: 'Otro',                        pregunta: '¿A qué te dedicas?', ejemplo: '' }
+    ejemplo: 'Por ejemplo: administración',
+    en: { nombre: 'Student', pregunta: 'What are you studying?', ejemplo: 'For example: business' } },
+  { id: 'otro',          nombre: 'Otro',                        pregunta: '¿A qué te dedicas?', ejemplo: '',
+    en: { nombre: 'Other', pregunta: 'What do you do?', ejemplo: '' } }
 ];
 const nombreOcupacion = id => (OCUPACIONES.find(o => o.id === id) || {}).nombre || '';
 
@@ -50,6 +60,16 @@ const PROYECTO = [
   'inventario, las compras y los gastos, y hacer el corte de caja. El dueño ve ' +
   'desde su celular o su computadora cómo va el negocio: cuánto vendió, cuánto ' +
   'gastó y cuánto le quedó.'
+];
+
+// Lo mismo, para quien contesta en inglés.
+const PROYECTO_EN = [
+  'It is an app to run small and medium-sized businesses of any kind: shops, coffee shops, ' +
+  'taco stands, beauty salons, repair shops, and more.',
+  'It lets owners take payments in cash or by card and record every sale, keep track of ' +
+  'inventory, purchases and expenses, and close out the register. From their phone or computer ' +
+  'they can see how the business is doing: how much they sold, how much they spent, and how ' +
+  'much they kept.'
 ];
 
 const TOP = 5;                      // cuántos lugares pide
@@ -105,6 +125,8 @@ async function prepararBase() {
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS finalista_porque TEXT');
   // Otro nombre que se le ocurra a la persona. Opcional y sin filtro: son ideas.
   await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS sugerencia TEXT');
+  // En qué idioma contestó: 'es' o 'en'. Vacío en las respuestas de antes del selector.
+  await pool.query('ALTER TABLE respuestas ADD COLUMN IF NOT EXISTS idioma TEXT');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS candidatos (
@@ -132,13 +154,13 @@ async function guardar(fila) {
   }
   await pool.query(
     'INSERT INTO respuestas (quien, correo, orden, porque, peor, peor_porque, memoria, libre, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia, creado) ' +
-    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::timestamptz, now()))',
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia, creado, idioma) ' +
+    'VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,COALESCE($16::timestamptz, now()),$17)',
     [fila.quien, fila.correo, JSON.stringify(fila.orden), JSON.stringify(fila.porque),
      fila.peor, fila.peorPorque, fila.memoria, fila.libre,
      fila.ocupacion, fila.ocupacionDetalle, fila.aceptaInfo, JSON.stringify(fila.vistos),
      fila.finalista, fila.finalistaPorque, fila.sugerencia,
-     fila.creado ? new Date(fila.creado).toISOString() : null]
+     fila.creado ? new Date(fila.creado).toISOString() : null, fila.idioma === 'en' ? 'en' : 'es']
   );
 }
 
@@ -146,7 +168,7 @@ async function leerTodas() {
   if (!pool) return memoria;
   const r = await pool.query(
     'SELECT id, quien, correo, orden, porque, peor, peor_porque, memoria, libre, creado, excluida, excluida_en, ' +
-    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia ' +
+    'ocupacion, ocupacion_detalle, acepta_info, vistos, finalista, finalista_porque, sugerencia, idioma ' +
     'FROM respuestas ORDER BY id');
   // La base usa snake_case; el resto del código habla camelCase.
   r.rows.forEach(f => {
@@ -386,6 +408,7 @@ function respuestaPublica(f) {
     finalista: f.finalista || '',
     finalistaPorque: f.finalistaPorque || '',
     sugerencia: f.sugerencia || '',
+    idioma: f.idioma === 'en' ? 'en' : 'es',
     libre: f.libre || '',
     ocupacion: f.ocupacion || '',
     ocupacionNombre: nombreOcupacion(f.ocupacion),
@@ -409,7 +432,7 @@ app.get('/api/config', async (_req, res) => {
   try {
     const candidatos = (await leerCandidatos()).filter(c => c.activo).map(c => c.nombre);
     res.json({ candidatos, top: TOP, obligatorias: OBLIGATORIAS, ocupaciones: OCUPACIONES,
-               proyecto: PROYECTO });
+               proyecto: PROYECTO, proyectoEn: PROYECTO_EN });
   } catch (err) {
     console.error('[error] al leer candidatos:', err.message);
     res.status(500).json({ error: 'No se pudo cargar la lista.' });
@@ -498,6 +521,7 @@ app.post('/api/respuesta', async (req, res) => {
       finalista,
       finalistaPorque: finalista ? String(b.finalistaPorque || '').trim().slice(0, 400) : '',
       sugerencia: String(b.sugerencia || '').trim().replace(/\s+/g, ' ').slice(0, 60),
+      idioma: b.idioma === 'en' ? 'en' : 'es',
       libre: String(b.libre || '').trim().slice(0, 600),
       ocupacion,
       ocupacionDetalle: String(b.ocupacionDetalle || '').trim().slice(0, 160),
@@ -530,16 +554,19 @@ app.get('/api/resultados', async (req, res) => {
 
     // Cuántas respuestas activas hay de cada ocupación, para el filtro.
     const porOcupacion = {};
+    const porIdioma = { es: 0, en: 0 };
     todasSinFiltro.filter(f => !f.excluida).forEach(f => {
       const k = f.ocupacion || 'sin';
       porOcupacion[k] = (porOcupacion[k] || 0) + 1;
+      porIdioma[f.idioma === 'en' ? 'en' : 'es'] += 1;
     });
 
-    // Con filtro, toda la página habla solo de esa ocupación.
+    // Con filtro, toda la página habla solo de esa ocupación o de ese idioma ('idioma:en').
     const filtro = String(req.query.ocupacion || '');
-    const todas = filtro
-      ? todasSinFiltro.filter(f => (f.ocupacion || 'sin') === filtro)
-      : todasSinFiltro;
+    const todas = !filtro ? todasSinFiltro
+      : filtro.startsWith('idioma:')
+        ? todasSinFiltro.filter(f => (f.idioma === 'en' ? 'en' : 'es') === filtro.slice(7))
+        : todasSinFiltro.filter(f => (f.ocupacion || 'sin') === filtro);
     const activas = todas.filter(f => !f.excluida);
 
     res.json({
@@ -550,6 +577,7 @@ app.get('/api/resultados', async (req, res) => {
       filtro,
       ocupaciones: OCUPACIONES.map(o => ({ id: o.id, nombre: o.nombre })),
       porOcupacion,
+      porIdioma,
       candidatos: candidatos.map(c => ({ id: c.id, nombre: c.nombre, activo: c.activo, alias: c.alias })),
       respuestasIndividuales: todas.map(respuestaPublica).reverse()
     });
@@ -757,7 +785,8 @@ app.post('/api/importar', express.text({ type: () => true, limit: '5mb' }), asyn
         vistos: vio && vio.length ? vio : null,
         finalista,
         finalistaPorque: finalista ? dato(f, 'por_que_finalista').slice(0, 400) : '',
-        sugerencia: dato(f, 'sugiere_otro_nombre').slice(0, 60)
+        sugerencia: dato(f, 'sugiere_otro_nombre').slice(0, 60),
+        idioma: llano(dato(f, 'idioma')).startsWith('ingl') ? 'en' : 'es'
       });
       ya.add(llave(creado, quien));
       importadas++;
@@ -786,6 +815,7 @@ app.get('/api/csv', async (req, res) => {
   // Qué nombres le aparecieron a cada quien. Sirve para importar el archivo a
   // una base nueva sin que cambien los promedios de los nombres agregados.
   cab.push('nombres_que_vio');
+  cab.push('idioma');
 
   const lineas = [cab.join(',')];
   filas.forEach(f => {
@@ -808,6 +838,7 @@ app.get('/api/csv', async (req, res) => {
                 : '');
     fila.push(f.sugerencia || '');
     fila.push((Array.isArray(f.vistos) ? f.vistos : ORIGINALES).join(' | '));
+    fila.push(f.idioma === 'en' ? 'inglés' : 'español');
     lineas.push(fila.map(celda).join(','));
   });
 

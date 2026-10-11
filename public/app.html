@@ -131,6 +131,14 @@ body{
   -webkit-tap-highlight-color:transparent;
 }
 .tema:hover{color:var(--accent-texto);border-color:var(--accent-texto)}
+/* Selector de idioma: dos mitades, la elegida resaltada. */
+.idioma{display:flex;flex:0 0 auto;height:36px;border:1px solid var(--line);border-radius:10px;
+  overflow:hidden;background:var(--surface)}
+.idioma button{font:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;color:var(--muted);
+  background:transparent;border:0;padding:0 9px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.idioma button + button{border-left:1px solid var(--line)}
+.idioma button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink)}
+.idioma button:hover{color:var(--accent-texto)}
 .tema svg{pointer-events:none;display:block}
 
 main{flex:1;max-width:660px;width:100%;margin:0 auto;padding:20px 18px 170px}
@@ -661,6 +669,11 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
         <h1 id="titulo">Escoge tus favoritos</h1>
         <div class="der">
           <span class="cuenta" id="cuenta"></span>
+          <!-- Idioma de la encuesta. También se puede abrir directo en inglés con ?lang=en -->
+          <div class="idioma" role="group" aria-label="Idioma · Language">
+            <button type="button" data-l="es" lang="es" aria-pressed="true" title="Español">ES</button>
+            <button type="button" data-l="en" lang="en" aria-pressed="false" title="English">EN</button>
+          </div>
           <button class="tema" id="tema" type="button"></button>
         </div>
       </div>
@@ -671,27 +684,27 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
 
     <!-- 1 · elegir -->
     <section class="pantalla" id="p1">
-      <h2 class="pregunta-final">¿Cuáles son los <span id="cuantos">5</span> nombres que más te gustan?</h2>
-      <p class="ayuda">Tócalos empezando por tu favorito. Si quieres quitar uno, sólo tócalo otra vez.</p>
+      <h2 class="pregunta-final" id="p1-pregunta">¿Cuáles son los 5 nombres que más te gustan?</h2>
+      <p class="ayuda" data-t="p1Ayuda">Tócalos empezando por tu favorito. Si quieres quitar uno, sólo tócalo otra vez.</p>
       <div class="rejilla" id="rejilla"></div>
     </section>
 
     <!-- 2 · ordenar -->
     <section class="pantalla" id="p2" hidden>
-      <h2 class="pregunta-final">Este es tu podio. ¿Lo dejamos así?</h2>
-      <p class="ayuda">Si quieres reacomodarlos, sólo arrastra desde las rayitas.</p>
+      <h2 class="pregunta-final" data-t="p2Pregunta">Este es tu podio. ¿Lo dejamos así?</h2>
+      <p class="ayuda" data-t="p2Ayuda">Si quieres reacomodarlos, sólo arrastra desde las rayitas.</p>
       <div class="orden" id="orden"></div>
-      <p class="pista">También puedes moverlos con las flechas del teclado.</p>
+      <p class="pista" data-t="p2Pista">También puedes moverlos con las flechas del teclado.</p>
     </section>
 
     <!-- 3 · descartar -->
     <section class="pantalla" id="p3" hidden>
-      <h2 class="pregunta-final">De los que no escogiste, ¿cuál te gusta menos?</h2>
-      <p class="ayuda">Esto me sirve tanto como saber cuáles te gustaron.</p>
+      <h2 class="pregunta-final" data-t="p3Pregunta">De los que no escogiste, ¿cuál te gusta menos?</h2>
+      <p class="ayuda" data-t="p3Ayuda">Esto me sirve tanto como saber cuáles te gustaron.</p>
       <div class="descartar" id="descartar"></div>
       <label class="campo">
-        <span>¿Por qué ese?</span>
-        <textarea class="libre" id="peor-porque"
+        <span data-t="porQueEse">¿Por qué ese?</span>
+        <textarea class="libre" id="peor-porque" data-t-ph="p3Ph"
                   placeholder="Por ejemplo: suena feo, no se entiende, me recuerda a otra cosa, etc…"></textarea>
       </label>
     </section>
@@ -702,10 +715,10 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
       <div class="ficha">
         <p class="lugar" id="ficha-lugar"></p>
         <h2 id="ficha-nombre"></h2>
-        <p class="pregunta">Sin pensarlo mucho: ¿qué producto o servicio crees que vende, o de qué crees que es el negocio?</p>
-        <textarea id="ficha-texto" placeholder="Por ejemplo: Una tiendita, una app de citas, un banco…"></textarea>
-        <p class="opcional" id="ficha-opcional" hidden>Este puedes saltarlo si no se te ocurre nada.</p>
-        <button class="saltar" id="saltar" hidden type="button">Saltar este</button>
+        <p class="pregunta" data-t="p4Pregunta">Sin pensarlo mucho: ¿qué producto o servicio crees que vende, o de qué crees que es el negocio?</p>
+        <textarea id="ficha-texto" data-t-ph="p4Ph" placeholder="Por ejemplo: Una tiendita, una app de citas, un banco…"></textarea>
+        <p class="opcional" id="ficha-opcional" data-t="p4Opcional" hidden>Este puedes saltarlo si no se te ocurre nada.</p>
+        <button class="saltar" id="saltar" data-t="p4Saltar" hidden type="button">Saltar este</button>
       </div>
     </section>
 
@@ -718,51 +731,50 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
             <path d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3z"/><path d="M9.5 20h5"/>
           </svg>
         </div>
-        <h2>Sin regresar a verlo: ¿cómo se escribe tu favorito, el que marcaste como
-          <span id="mem-uno">#1</span>?</h2>
-        <p>No vale asomarse. Si no te acuerdas exacto, escribe como creas que va.</p>
+        <h2 id="mem-pregunta">Sin regresar a verlo: ¿cómo se escribe tu favorito, el que marcaste como #1?</h2>
+        <p data-t="p5Ayuda">No vale asomarse. Si no te acuerdas exacto, escribe como creas que va.</p>
         <input type="text" id="memoria" autocomplete="off" autocapitalize="words"
-               spellcheck="false" placeholder="Escríbelo aquí">
+               spellcheck="false" data-t-ph="p5Ph" placeholder="Escríbelo aquí">
       </div>
     </section>
 
     <!-- 6 · revelar el proyecto y elegir finalista -->
     <section class="pantalla" id="p6" hidden>
-      <p class="ayuda entrada">Hasta aquí opinaste sin saber de qué era. Ya te puedo contar.</p>
+      <p class="ayuda entrada" data-t="p6Entrada">Hasta aquí opinaste sin saber de qué era. Ya te puedo contar.</p>
       <div class="revela">
-        <p class="lugar">El proyecto</p>
+        <p class="lugar" data-t="p6Proyecto">El proyecto</p>
         <div id="proyecto"></div>
       </div>
-      <h2 class="pregunta-final">Sabiendo esto, ¿cuál nombre consideras que le queda mejor?</h2>
-      <p class="ayuda">Puede ser el mismo que ya traías o uno distinto. Las dos cosas me sirven.</p>
+      <h2 class="pregunta-final" data-t="p6Pregunta">Sabiendo esto, ¿cuál nombre consideras que le queda mejor?</h2>
+      <p class="ayuda" data-t="p6Ayuda">Puede ser el mismo que ya traías o uno distinto. Las dos cosas me sirven.</p>
       <div class="rejilla" id="finalista"></div>
       <label class="campo">
-        <span id="finalista-etiqueta">¿Por qué ese? <em style="color:var(--muted)">(opcional)</em></span>
-        <textarea class="libre" id="finalista-porque" maxlength="400"
+        <span><span id="finalista-etiqueta">¿Por qué ese?</span> <em style="color:var(--muted)" data-t="opcional">(opcional)</em></span>
+        <textarea class="libre" id="finalista-porque" maxlength="400" data-t-ph="p6PorquePh"
                   placeholder="Suena a lo que hace, se oye serio, se me queda…"></textarea>
       </label>
       <label class="campo">
-        <span>¿Se te ocurre otro nombre? <em style="color:var(--muted)">(opcional)</em></span>
+        <span><span data-t="p6Sugerencia">¿Se te ocurre otro nombre?</span> <em style="color:var(--muted)" data-t="opcional">(opcional)</em></span>
         <input type="text" id="sugerencia" maxlength="60" autocomplete="off" autocapitalize="words"
-               spellcheck="false" placeholder="Solo para darme ideas">
+               spellcheck="false" data-t-ph="p6SugerenciaPh" placeholder="Solo para darme ideas">
       </label>
     </section>
 
     <!-- 7 · firmar -->
     <section class="pantalla" id="p7" hidden>
-      <p class="ayuda">Esto es lo que me vas a mandar. Lo que contestaste antes de saber
+      <p class="ayuda" data-t="p7Ayuda">Esto es lo que me vas a mandar. Lo que contestaste antes de saber
         de qué era ya no se cambia, para que se quede tu primera impresión.</p>
       <div class="resumen" id="resumen"></div>
 
-      <h2 class="pregunta-final">Ya nada más dime quién eres</h2>
-      <p class="ayuda">Así sé de quién viene cada opinión.</p>
+      <h2 class="pregunta-final" data-t="p7Pregunta">Ya nada más dime quién eres</h2>
+      <p class="ayuda" data-t="p7Ayuda2">Así sé de quién viene cada opinión.</p>
 
       <label class="campo">
-        <span>¿Cómo te llamas?</span>
-        <input type="text" id="quien" placeholder="Tu nombre" autocomplete="name">
+        <span data-t="p7Nombre">¿Cómo te llamas?</span>
+        <input type="text" id="quien" data-t-ph="p7NombrePh" placeholder="Tu nombre" autocomplete="name">
       </label>
       <div class="campo">
-        <span class="campo-t" id="ocupacion-t">¿A qué te dedicas?</span>
+        <span class="campo-t" id="ocupacion-t" data-t="p7Ocupacion">¿A qué te dedicas?</span>
         <div class="chips" id="ocupaciones" role="group" aria-labelledby="ocupacion-t"></div>
       </div>
       <label class="campo" id="detalle-campo" hidden>
@@ -770,26 +782,26 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
         <input type="text" id="ocupacion-detalle" maxlength="160" autocomplete="off">
       </label>
       <label class="campo">
-        <span>¿Me dejas tu correo? <em style="color:var(--muted)">(opcional)</em></span>
+        <span><span data-t="p7Correo">¿Me dejas tu correo?</span> <em style="color:var(--muted)" data-t="opcional">(opcional)</em></span>
         <input type="email" id="correo" inputmode="email" autocomplete="email"
-               placeholder="tunombre@correo.com">
+               data-t-ph="p7CorreoPh" placeholder="tunombre@correo.com">
       </label>
       <label class="permiso">
         <input type="checkbox" id="acepta">
-        <span>Sí, mándame información cuando lances tu proyecto.
-          <small>Solo te escribiré si marcas esta casilla. Para eso necesito tu correo.</small></span>
+        <span><span data-t="p7Permiso">Sí, mándame información cuando lances tu proyecto.</span>
+          <small data-t="p7PermisoNota">Solo te escribiré si marcas esta casilla. Para eso necesito tu correo.</small></span>
       </label>
       <label class="campo">
-        <span>¿Algo más que me quieras decir? <em style="color:var(--muted)">(opcional)</em></span>
-        <textarea class="libre" id="libre" placeholder="Un nombre que te chocó, algo que no se entendió, lo que sea"></textarea>
+        <span><span data-t="p7Libre">¿Algo más que me quieras decir?</span> <em style="color:var(--muted)" data-t="opcional">(opcional)</em></span>
+        <textarea class="libre" id="libre" data-t-ph="p7LibrePh" placeholder="Un nombre que te chocó, algo que no se entendió, lo que sea"></textarea>
       </label>
     </section>
 
     <!-- final -->
     <section class="pantalla" id="pf" hidden>
       <div class="gracias">
-        <h2>¡Gracias!</h2>
-        <p>¡Tu opinión es muy importante para mí!</p>
+        <h2 data-t="graciasT">¡Gracias!</h2>
+        <p data-t="graciasP">¡Tu opinión es muy importante para mí!</p>
       </div>
       <div class="resumen" id="resumen-final"></div>
     </section>
@@ -798,7 +810,7 @@ details.resp[open] > summary{border-bottom:1px solid var(--line-soft)}
 
   <div class="pie" id="pie">
     <div class="pie-in">
-      <button class="btn atras" id="atras" type="button" hidden>Atrás</button>
+      <button class="btn atras" id="atras" type="button" data-t="atras" hidden>Atrás</button>
       <button class="btn" id="seguir" type="button" disabled>Continuar</button>
     </div>
     <p class="nota" id="nota"></p>
@@ -942,8 +954,160 @@ function insignia(p) {
   'use strict';
 
   // La lista vive en el servidor (server.js). Aquí solo se recibe.
-  var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [], PROYECTO = [];
+  var NOMBRES = [], TOP = 5, OBLIG = 3, OCUP = [], PROYECTO = [], PROYECTO_EN = [];
   var LLAVE = 'encuesta-nombres-v1';
+
+  /* ---------- idioma: español por omisión; inglés con el selector o abriendo con ?lang=en ---------- */
+  var TXT = {
+    es: {
+      tituloPagina: 'Ayúdame a elegir el nombre',
+      t1: 'Escoge tus favoritos', t2: 'Arma tu podio', t3: 'El que descartarías',
+      t4: '¿Qué te suena que vende?', t5: 'De memoria', t6: 'Ahora sí te cuento',
+      t7: 'Revisa y manda', t8: 'Listo',
+      p1Pregunta: '¿Cuáles son los {0} nombres que más te gustan?',
+      p1Ayuda: 'Tócalos empezando por tu favorito. Si quieres quitar uno, sólo tócalo otra vez.',
+      p2Pregunta: 'Este es tu podio. ¿Lo dejamos así?',
+      p2Ayuda: 'Si quieres reacomodarlos, sólo arrastra desde las rayitas.',
+      p2Pista: 'También puedes moverlos con las flechas del teclado.',
+      p3Pregunta: 'De los que no escogiste, ¿cuál te gusta menos?',
+      p3Ayuda: 'Esto me sirve tanto como saber cuáles te gustaron.',
+      porQueEse: '¿Por qué ese?',
+      p3Ph: 'Por ejemplo: suena feo, no se entiende, me recuerda a otra cosa, etc…',
+      p4Lugar: 'Tu lugar',
+      p4Pregunta: 'Sin pensarlo mucho: ¿qué producto o servicio crees que vende, o de qué crees que es el negocio?',
+      p4Ph: 'Por ejemplo: Una tiendita, una app de citas, un banco…',
+      p4Opcional: 'Este puedes saltarlo si no se te ocurre nada.',
+      p4Saltar: 'Saltar este',
+      p5Pregunta: 'Sin regresar a verlo: ¿cómo se escribe tu favorito, el que marcaste como {0}?',
+      p5Ayuda: 'No vale asomarse. Si no te acuerdas exacto, escribe como creas que va.',
+      p5Ph: 'Escríbelo aquí',
+      p6Entrada: 'Hasta aquí opinaste sin saber de qué era. Ya te puedo contar.',
+      p6Proyecto: 'El proyecto',
+      p6Pregunta: 'Sabiendo esto, ¿cuál nombre consideras que le queda mejor?',
+      p6Ayuda: 'Puede ser el mismo que ya traías o uno distinto. Las dos cosas me sirven.',
+      p6Cambio: '¿Qué te hizo cambiar?',
+      p6PorquePh: 'Suena a lo que hace, se oye serio, se me queda…',
+      p6Sugerencia: '¿Se te ocurre otro nombre?',
+      p6SugerenciaPh: 'Solo para darme ideas',
+      p7Ayuda: 'Esto es lo que me vas a mandar. Lo que contestaste antes de saber de qué era ya no se cambia, para que se quede tu primera impresión.',
+      p7Pregunta: 'Ya nada más dime quién eres',
+      p7Ayuda2: 'Así sé de quién viene cada opinión.',
+      p7Nombre: '¿Cómo te llamas?', p7NombrePh: 'Tu nombre',
+      p7Ocupacion: '¿A qué te dedicas?',
+      p7Correo: '¿Me dejas tu correo?', p7CorreoPh: 'tunombre@correo.com',
+      p7Permiso: 'Sí, mándame información cuando lances tu proyecto.',
+      p7PermisoNota: 'Solo te escribiré si marcas esta casilla. Para eso necesito tu correo.',
+      p7Libre: '¿Algo más que me quieras decir?',
+      p7LibrePh: 'Un nombre que te chocó, algo que no se entendió, lo que sea',
+      opcional: '(opcional)',
+      graciasT: '¡Gracias!', graciasP: '¡Tu opinión es muy importante para mí!',
+      atras: 'Atrás', continuar: 'Continuar', asiBien: 'Así está bien', siguiente: 'Siguiente',
+      yaCasi: 'Ya casi', enviar: 'Enviar', enviando: 'Enviando…',
+      faltan: 'Faltan {0}', yaEstan: 'Ya están los {0}', deN: '{0} de {1}',
+      sinDescribir: '— sin describir —', descartas: 'Descartas', deMemoria: 'De memoria',
+      coincide: 'Coincide con tu #1', tuUno: 'Tu #1 es {0}', sabiendo: 'Ya sabiendo de qué es',
+      mismoUno: 'El mismo que tu #1', antesLugar: 'Antes lo tenías en tu lugar {0}',
+      noPodio: 'No estaba en tu podio', tuIdea: 'Tu idea de nombre', editar: 'Editar',
+      nPeor: 'Escoge uno. Alguno te tuvo que gustar menos.',
+      nPorque: 'Dime por qué, aunque sea en tres palabras.',
+      nFicha: 'De este sí necesito tu impresión, aunque sea una palabra.',
+      nMemoria: 'Inténtalo aunque no estés seguro: eso es justo lo que mido.',
+      nFinalista: 'Escoge uno, aunque sea el mismo de antes.',
+      nNombre: 'Ponme tu nombre para saber de quién es la opinión.',
+      nOcupacion: 'Dime a qué te dedicas, es un toque.',
+      nCorreoInfo: 'Para mandarte información necesito tu correo.',
+      nCorreoMal: 'Ese correo no se ve bien. Corrígelo o déjalo vacío.',
+      nEnvio: 'No se pudo enviar: {0}', nIntenta: 'intenta otra vez',
+      nCarga: 'No se pudo cargar la lista de nombres. Recarga la página.',
+      mover: 'Mover {0}, lugar {1} de {2}',
+      aModoClaro: 'Cambiar a modo claro', aModoOscuro: 'Cambiar a modo oscuro',
+      modoClaro: 'Modo claro', modoOscuro: 'Modo oscuro'
+    },
+    en: {
+      tituloPagina: 'Help me pick the name',
+      t1: 'Pick your favorites', t2: 'Your podium', t3: 'The one you would drop',
+      t4: 'What does it sound like?', t5: 'From memory', t6: 'Now I can tell you',
+      t7: 'Review and send', t8: 'Done',
+      p1Pregunta: 'Which {0} names do you like best?',
+      p1Ayuda: 'Tap them starting with your favorite. To remove one, just tap it again.',
+      p2Pregunta: 'This is your podium. Keep it like this?',
+      p2Ayuda: 'To reorder them, drag from the little lines.',
+      p2Pista: 'You can also move them with the arrow keys.',
+      p3Pregunta: 'Of the ones you did not pick, which do you like least?',
+      p3Ayuda: 'This helps me as much as knowing which ones you liked.',
+      porQueEse: 'Why that one?',
+      p3Ph: 'For example: sounds off, hard to understand, reminds me of something else…',
+      p4Lugar: 'Your pick',
+      p4Pregunta: 'Without overthinking it: what product or service do you think it sells, or what kind of business is it?',
+      p4Ph: 'For example: a corner store, a dating app, a bank…',
+      p4Opcional: 'You can skip this one if nothing comes to mind.',
+      p4Saltar: 'Skip this one',
+      p5Pregunta: 'Without looking back: how do you spell your favorite, the one you marked as {0}?',
+      p5Ayuda: 'No peeking. If you do not remember exactly, write it the way you think it goes.',
+      p5Ph: 'Type it here',
+      p6Entrada: 'So far you answered without knowing what it was for. Now I can tell you.',
+      p6Proyecto: 'The project',
+      p6Pregunta: 'Knowing this, which name do you think fits it best?',
+      p6Ayuda: 'It can be the same one you picked before or a different one. Either answer helps me.',
+      p6Cambio: 'What made you change?',
+      p6PorquePh: 'Sounds like what it does, sounds professional, it sticks…',
+      p6Sugerencia: 'Can you think of another name?',
+      p6SugerenciaPh: 'Just to give me ideas',
+      p7Ayuda: 'This is what you are about to send. What you answered before knowing what it was for can no longer be changed, so your first impression stays as it was.',
+      p7Pregunta: 'Last thing: tell me who you are',
+      p7Ayuda2: 'So I know who each opinion comes from.',
+      p7Nombre: 'What is your name?', p7NombrePh: 'Your name',
+      p7Ocupacion: 'What do you do?',
+      p7Correo: 'Can I have your email?', p7CorreoPh: 'yourname@email.com',
+      p7Permiso: 'Yes, let me know when your project launches.',
+      p7PermisoNota: 'I will only write to you if you check this box. I need your email for that.',
+      p7Libre: 'Anything else you would like to tell me?',
+      p7LibrePh: 'A name that bugged you, something that was not clear, anything',
+      opcional: '(optional)',
+      graciasT: 'Thank you!', graciasP: 'Your opinion really matters to me!',
+      atras: 'Back', continuar: 'Continue', asiBien: 'Looks good', siguiente: 'Next',
+      yaCasi: 'Almost done', enviar: 'Send', enviando: 'Sending…',
+      faltan: '{0} to go', yaEstan: 'All {0} picked', deN: '{0} of {1}',
+      sinDescribir: '— no description —', descartas: 'You would drop', deMemoria: 'From memory',
+      coincide: 'Matches your #1', tuUno: 'Your #1 is {0}', sabiendo: 'Knowing what it is for',
+      mismoUno: 'Same as your #1', antesLugar: 'Before, you had it at #{0}',
+      noPodio: 'It was not on your podium', tuIdea: 'Your name idea', editar: 'Edit',
+      nPeor: 'Pick one. There has to be one you like least.',
+      nPorque: 'Tell me why, even in three words.',
+      nFicha: 'I do need your take on this one, even just one word.',
+      nMemoria: 'Give it a try even if you are not sure: that is exactly what I am measuring.',
+      nFinalista: 'Pick one, even if it is the same as before.',
+      nNombre: 'Add your name so I know whose opinion this is.',
+      nOcupacion: 'Tell me what you do, it only takes a tap.',
+      nCorreoInfo: 'I need your email to let you know.',
+      nCorreoMal: 'That email does not look right. Fix it or leave it blank.',
+      nEnvio: 'Could not send: {0}', nIntenta: 'please try again',
+      nCarga: 'Could not load the list of names. Please reload the page.',
+      mover: 'Move {0}, position {1} of {2}',
+      aModoClaro: 'Switch to light mode', aModoOscuro: 'Switch to dark mode',
+      modoClaro: 'Light mode', modoOscuro: 'Dark mode'
+    }
+  };
+  var LLAVE_IDIOMA = 'encuesta-idioma';
+  var IDIOMA = (function () {
+    var q = new URLSearchParams(location.search).get('lang');
+    if (q === 'en' || q === 'es') return q;
+    try {
+      var g = localStorage.getItem(LLAVE_IDIOMA);
+      if (g === 'en' || g === 'es') return g;
+    } catch (e) { /* sin almacenamiento: español */ }
+    return 'es';
+  })();
+  // Texto en el idioma elegido; {0}, {1}… se reemplazan por los argumentos.
+  function tx(k) {
+    var args = arguments;
+    var s = TXT[IDIOMA][k] !== undefined ? TXT[IDIOMA][k] : TXT.es[k];
+    return String(s).replace(/\{(\d)\}/g, function (_, n) { return args[Number(n) + 1]; });
+  }
+  // Las ocupaciones traen su versión en inglés desde el servidor.
+  function ocTxt(o, campo) {
+    return (IDIOMA === 'en' && o.en && o.en[campo] !== undefined) ? o.en[campo] : (o[campo] || '');
+  }
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -1053,8 +1217,7 @@ function insignia(p) {
       asa.innerHTML = ASA_SVG;
       asa.setAttribute('role', 'button');
       asa.setAttribute('tabindex', '0');
-      asa.setAttribute('aria-label', 'Mover ' + n + ', lugar ' + (p + 1) +
-                       ' de ' + st.elegidos.length);
+      asa.setAttribute('aria-label', tx('mover', n, p + 1, st.elegidos.length));
       asa.addEventListener('pointerdown', function (e) { tomar(e, p, asa); });
       asa.addEventListener('keydown', function (e) {
         if (e.key === 'ArrowUp')   { e.preventDefault(); moverYEnfocar(p, -1); }
@@ -1166,7 +1329,7 @@ function insignia(p) {
     }
 
     var lugar = $('ficha-lugar');
-    lugar.textContent = 'Tu lugar';
+    lugar.textContent = tx('p4Lugar');
     lugar.appendChild(insignia(st.idx));
     $('ficha-nombre').textContent = n;
     var ta = $('ficha-texto');
@@ -1204,7 +1367,7 @@ function insignia(p) {
     // Primer párrafo en grande; los demás, abajo, como detalle.
     var caja = $('proyecto');
     caja.innerHTML = '';
-    PROYECTO.forEach(function (texto, i) {
+    (IDIOMA === 'en' && PROYECTO_EN.length ? PROYECTO_EN : PROYECTO).forEach(function (texto, i) {
       var p = document.createElement('p');
       p.className = i === 0 ? 'que' : 'mas';
       p.textContent = texto;
@@ -1229,17 +1392,16 @@ function insignia(p) {
 
     // El porqué vale más cuando cambió de opinión: ahí se lo pregunto directo.
     var cambio = st.finalista && st.finalista !== st.elegidos[0];
-    $('finalista-etiqueta').firstChild.nodeValue =
-      cambio ? '¿Qué te hizo cambiar? ' : '¿Por qué ese? ';
+    $('finalista-etiqueta').textContent = cambio ? tx('p6Cambio') : tx('porQueEse');
     $('finalista-porque').value = st.finalistaPorque;
     $('sugerencia').value = st.sugerencia;
   }
 
   function notaFinalista() {
     var pos = st.elegidos.indexOf(st.finalista);
-    var rel = pos === 0 ? 'El mismo que tu #1'
-            : pos > 0   ? 'Antes lo tenías en tu lugar ' + (pos + 1)
-                        : 'No estaba en tu podio';
+    var rel = pos === 0 ? tx('mismoUno')
+            : pos > 0   ? tx('antesLugar', pos + 1)
+                        : tx('noPodio');
     return st.finalistaPorque ? rel + ' · ' + st.finalistaPorque : rel;
   }
 
@@ -1261,7 +1423,7 @@ function insignia(p) {
       med.appendChild(nm);
       var d = document.createElement('span');
       d.className = 'dc';
-      d.textContent = (st.textos[n] || '').trim() || '— sin describir —';
+      d.textContent = (st.textos[n] || '').trim() || tx('sinDescribir');
       med.appendChild(d);
 
       f.appendChild(num); f.appendChild(med);
@@ -1271,14 +1433,14 @@ function insignia(p) {
     // Lo demás que va en el envío, para que nada viaje a ciegas.
     // Lo contestado a ciegas ya no lleva "Editar": después de saber de qué es el
     // proyecto dejaría de ser la primera impresión. Solo el finalista se corrige.
-    if (st.peor) c.appendChild(filaExtra('Descartas', st.peor, st.peorPorque, 0));
-    if (st.memoria) c.appendChild(filaExtra('De memoria', st.memoria,
+    if (st.peor) c.appendChild(filaExtra(tx('descartas'), st.peor, st.peorPorque, 0));
+    if (st.memoria) c.appendChild(filaExtra(tx('deMemoria'), st.memoria,
       llano(st.memoria) === llano(st.elegidos[0])
-        ? 'Coincide con tu #1' : 'Tu #1 es ' + st.elegidos[0],
+        ? tx('coincide') : tx('tuUno', st.elegidos[0]),
       0));
-    if (st.finalista) c.appendChild(filaExtra('Ya sabiendo de qué es', st.finalista,
+    if (st.finalista) c.appendChild(filaExtra(tx('sabiendo'), st.finalista,
       notaFinalista(), conEditar ? REVELA : 0));
-    if (st.sugerencia) c.appendChild(filaExtra('Tu idea de nombre', st.sugerencia, '',
+    if (st.sugerencia) c.appendChild(filaExtra(tx('tuIdea'), st.sugerencia, '',
       conEditar ? REVELA : 0));
   }
 
@@ -1311,7 +1473,7 @@ function insignia(p) {
     f.appendChild(izq); f.appendChild(med);
     if (pasoEditar) {
       var e = document.createElement('button');
-      e.type = 'button'; e.className = 'editar'; e.textContent = 'Editar';
+      e.type = 'button'; e.className = 'editar'; e.textContent = tx('editar');
       e.addEventListener('click', function () { ir(pasoEditar); });
       f.appendChild(e);
     }
@@ -1327,7 +1489,7 @@ function insignia(p) {
       b.type = 'button';
       b.className = 'chip';
       b.dataset.id = o.id;
-      b.textContent = o.nombre;
+      b.textContent = ocTxt(o, 'nombre');
       b.addEventListener('click', function () {
         // Otra ocupación, otra pregunta: lo escrito para la anterior ya no aplica.
         if (st.ocupacion !== o.id) st.ocupacionDetalle = '';
@@ -1352,22 +1514,18 @@ function insignia(p) {
     $('detalle-campo').hidden = !pide;
     if (!pide) return;
     var t = $('detalle-t');
-    t.textContent = o.pregunta + ' ';
+    t.textContent = ocTxt(o, 'pregunta') + ' ';
     var em = document.createElement('em');
     em.style.color = 'var(--muted)';
-    em.textContent = '(opcional)';
+    em.textContent = tx('opcional');
     t.appendChild(em);
-    $('ocupacion-detalle').placeholder = o.ejemplo || '';
+    $('ocupacion-detalle').placeholder = ocTxt(o, 'ejemplo');
     $('ocupacion-detalle').value = st.ocupacionDetalle;
   }
 
   /* ---------- navegación ---------- */
   var PASOS = 7;                       // pantallas antes del "gracias"
   var REVELA = 6;                      // de aquí en adelante ya saben de qué es
-  var TITULOS = { 1: 'Escoge tus favoritos', 2: 'Arma tu podio',
-                  3: 'El que descartarías', 4: '¿Qué te suena que vende?',
-                  5: 'De memoria', 6: 'Ahora sí te cuento',
-                  7: 'Revisa y manda', 8: 'Listo' };
 
   // La memoria se contesta una sola vez. Si después cambia su #1, la pregunta
   // ya es otra y se vuelve a hacer.
@@ -1410,7 +1568,7 @@ function insignia(p) {
 
   function refrescar() {
     var p = st.paso;
-    $('titulo').textContent = TITULOS[p];
+    $('titulo').textContent = tx('t' + p);
 
     var barras = $('pasos');
     if (barras.children.length !== PASOS) {
@@ -1424,9 +1582,9 @@ function insignia(p) {
     var cuenta = '';
     if (p === 1) {
       var faltan = TOP - st.elegidos.length;
-      cuenta = faltan > 0 ? 'Faltan ' + faltan : 'Ya están los ' + TOP;
+      cuenta = faltan > 0 ? tx('faltan', faltan) : tx('yaEstan', TOP);
     } else if (p === 4) {
-      cuenta = (st.idx + 1) + ' de ' + TOP;
+      cuenta = tx('deN', st.idx + 1, TOP);
     }
     $('cuenta').textContent = cuenta;
 
@@ -1436,25 +1594,25 @@ function insignia(p) {
 
     var seguir = $('seguir');
     if (p === 1) {
-      seguir.textContent = 'Continuar';
+      seguir.textContent = tx('continuar');
       seguir.disabled = st.elegidos.length !== TOP;
     } else if (p === 2) {
-      seguir.textContent = 'Así está bien';
+      seguir.textContent = tx('asiBien');
       seguir.disabled = false;
     } else if (p === 3) {
-      seguir.textContent = 'Continuar';
+      seguir.textContent = tx('continuar');
       seguir.disabled = !st.peor;
     } else if (p === 4) {
-      seguir.textContent = (st.idx === TOP - 1) ? 'Ya casi' : 'Siguiente';
+      seguir.textContent = (st.idx === TOP - 1) ? tx('yaCasi') : tx('siguiente');
       seguir.disabled = false;
     } else if (p === 5) {
-      seguir.textContent = 'Continuar';
+      seguir.textContent = tx('continuar');
       seguir.disabled = false;
     } else if (p === REVELA) {
-      seguir.textContent = 'Continuar';
+      seguir.textContent = tx('continuar');
       seguir.disabled = !st.finalista;
     } else if (p === 7) {
-      seguir.textContent = 'Enviar';
+      seguir.textContent = tx('enviar');
       seguir.disabled = false;
     }
   }
@@ -1481,12 +1639,12 @@ function insignia(p) {
 
     if (p === 3) {
       if (!st.peor) {
-        $('nota').textContent = 'Escoge uno. Alguno te tuvo que gustar menos.';
+        $('nota').textContent = tx('nPeor');
         return;
       }
       st.peorPorque = $('peor-porque').value.trim();
       if (!st.peorPorque) {
-        $('nota').textContent = 'Dime por qué, aunque sea en tres palabras.';
+        $('nota').textContent = tx('nPorque');
         $('peor-porque').focus();
         return;
       }
@@ -1499,7 +1657,7 @@ function insignia(p) {
     if (p === 4) {
       var n = st.elegidos[st.idx];
       if (st.idx < OBLIG && !(st.textos[n] || '').trim()) {
-        $('nota').textContent = 'De este sí necesito tu impresión, aunque sea una palabra.';
+        $('nota').textContent = tx('nFicha');
         $('ficha-texto').focus();
         return;
       }
@@ -1510,7 +1668,7 @@ function insignia(p) {
     if (p === 5) {
       st.memoria = $('memoria').value.trim();
       if (!st.memoria) {
-        $('nota').textContent = 'Inténtalo aunque no estés seguro: eso es justo lo que mido.';
+        $('nota').textContent = tx('nMemoria');
         $('memoria').focus();
         return;
       }
@@ -1522,7 +1680,7 @@ function insignia(p) {
 
     if (p === REVELA) {
       if (!st.finalista) {
-        $('nota').textContent = 'Escoge uno, aunque sea el mismo de antes.';
+        $('nota').textContent = tx('nFinalista');
         return;
       }
       st.finalistaPorque = $('finalista-porque').value.trim();
@@ -1539,24 +1697,24 @@ function insignia(p) {
       st.ocupacionDetalle = $('ocupacion-detalle').value.trim();
       guardar();
       if (!st.quien) {
-        $('nota').textContent = 'Ponme tu nombre para saber de quién es la opinión.';
+        $('nota').textContent = tx('nNombre');
         $('quien').focus();
         return;
       }
       if (!st.ocupacion) {
-        $('nota').textContent = 'Dime a qué te dedicas, es un toque.';
+        $('nota').textContent = tx('nOcupacion');
         var chip = $('ocupaciones').querySelector('.chip');
         if (chip) chip.focus();
         return;
       }
       if (st.acepta && !st.correo) {
-        $('nota').textContent = 'Para mandarte información necesito tu correo.';
+        $('nota').textContent = tx('nCorreoInfo');
         $('correo').focus();
         return;
       }
       // El correo es opcional; si lo escribieron, al menos que tenga forma de correo.
       if (st.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(st.correo)) {
-        $('nota').textContent = 'Ese correo no se ve bien. Corrígelo o déjalo vacío.';
+        $('nota').textContent = tx('nCorreoMal');
         $('correo').focus();
         return;
       }
@@ -1634,8 +1792,8 @@ function insignia(p) {
     var oscuro = temaActual() === 'dark';
     var b = $('tema');
     b.innerHTML = oscuro ? SOL : LUNA;
-    b.setAttribute('aria-label', oscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
-    b.setAttribute('title', oscuro ? 'Modo claro' : 'Modo oscuro');
+    b.setAttribute('aria-label', oscuro ? tx('aModoClaro') : tx('aModoOscuro'));
+    b.setAttribute('title', oscuro ? tx('modoClaro') : tx('modoOscuro'));
   }
 
   $('tema').addEventListener('click', function () {
@@ -1666,14 +1824,62 @@ function insignia(p) {
 
   pintarBotonTema();
 
-  // El "#1" de la pregunta de memoria, con la misma estrella del podio.
-  $('mem-uno').replaceWith(insignia(0));
+  /* ---------- aplicar el idioma a todo lo que no se pinta paso por paso ---------- */
+  function aplicarIdioma() {
+    document.documentElement.lang = IDIOMA;
+    document.title = tx('tituloPagina');
+    Array.prototype.forEach.call(document.querySelectorAll('#vista-encuesta [data-t]'), function (el) {
+      el.textContent = tx(el.getAttribute('data-t'));
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#vista-encuesta [data-t-ph]'), function (el) {
+      el.placeholder = tx(el.getAttribute('data-t-ph'));
+    });
+    $('p1-pregunta').textContent = tx('p1Pregunta', TOP);
+    // El "#1" de la pregunta de memoria va con la misma estrella del podio.
+    var h = $('mem-pregunta');
+    var partes = tx('p5Pregunta', '\u0000').split('\u0000');
+    h.textContent = '';
+    h.appendChild(document.createTextNode(partes[0]));
+    h.appendChild(insignia(0));
+    h.appendChild(document.createTextNode(partes[1] || ''));
+    Array.prototype.forEach.call(document.querySelectorAll('.idioma [data-l]'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-l') === IDIOMA ? 'true' : 'false');
+    });
+    pintarBotonTema();
+  }
+
+  // Cambiar de idioma a media encuesta no pierde nada: se vuelve a pintar el mismo paso.
+  function repintar() {
+    var p = st.paso;
+    if (!NOMBRES.length) return;
+    if (p === 1) pintarRejilla();
+    if (p === 2) pintarOrden();
+    if (p === 3) pintarDescartar();
+    if (p === 4) pintarFicha();
+    if (p === REVELA) pintarFinalista();
+    if (p === 7) { pintarResumen('resumen', true); pintarOcupaciones(); }
+    if (p === PASOS + 1) pintarResumen('resumen-final', false);
+    refrescar();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.idioma [data-l]'), function (b) {
+    b.addEventListener('click', function () {
+      var l = b.getAttribute('data-l');
+      if (l === IDIOMA) return;
+      IDIOMA = l;
+      try { localStorage.setItem(LLAVE_IDIOMA, IDIOMA); } catch (e) {}
+      aplicarIdioma();
+      repintar();
+    });
+  });
+
+  aplicarIdioma();
 
   /* ---------- envío ---------- */
   function enviar() {
     var btn = $('seguir');
     btn.disabled = true;
-    btn.textContent = 'Enviando…';
+    btn.textContent = tx('enviando');
 
     fetch('/api/respuesta', {
       method: 'POST',
@@ -1689,6 +1895,7 @@ function insignia(p) {
         finalista: st.finalista,
         finalistaPorque: st.finalistaPorque,
         sugerencia: st.sugerencia,
+        idioma: IDIOMA,
         libre: st.libre,
         ocupacion: st.ocupacion,
         ocupacionDetalle: st.ocupacionDetalle,
@@ -1709,7 +1916,7 @@ function insignia(p) {
       .catch(function (err) {
         btn.disabled = false;
         btn.textContent = 'Enviar';
-        $('nota').textContent = 'No se pudo enviar: ' + (err.message || 'intenta otra vez');
+        $('nota').textContent = tx('nEnvio', err.message || tx('nIntenta'));
       });
   }
 
@@ -1722,7 +1929,8 @@ function insignia(p) {
       NOMBRES = cfg.candidatos; TOP = cfg.top; OBLIG = cfg.obligatorias;
       OCUP = cfg.ocupaciones || [];
       PROYECTO = [].concat(cfg.proyecto || []);
-      $('cuantos').textContent = TOP;
+      PROYECTO_EN = [].concat(cfg.proyectoEn || []);
+      $('p1-pregunta').textContent = tx('p1Pregunta', TOP);
       barajar();
       recuperar();
       // Quien ya vio de qué es el proyecto regresa ahí, no al principio.
@@ -1731,7 +1939,7 @@ function insignia(p) {
     })
     .catch(function () {
       $('rejilla').innerHTML =
-        '<p class="ayuda">No se pudo cargar la lista de nombres. Recarga la página.</p>';
+        '<p class="ayuda">' + tx('nCarga') + '</p>';
     });
 })();
 
@@ -2145,7 +2353,8 @@ function insignia(p) {
       cab.className = 'resp-cab';
       cab.innerHTML =
         '<div><h3>' + esc(r.quien || 'Anónimo') +
-          '<span class="tag">' + (r.excluida ? 'Excluida' : 'Activa') + '</span></h3>' +
+          '<span class="tag">' + (r.excluida ? 'Excluida' : 'Activa') + '</span>' +
+          (r.idioma === 'en' ? '<span class="tag">En inglés</span>' : '') + '</h3>' +
           '<div class="linea-r">' + esc(resumen) + '</div>' +
           '<div class="meta">#' + esc(r.id) + ' · ' + esc(fecha(r.creado)) +
             (r.ocupacionNombre ? ' · ' + esc(r.ocupacionNombre) : '') + '</div></div>';
@@ -2335,6 +2544,12 @@ function insignia(p) {
     (R.ocupaciones || []).concat([{ id: 'sin', nombre: 'Sin dato' }]).forEach(function (o) {
       if (cuenta[o.id] || o.id === filtro) opciones.push({ id: o.id, nombre: o.nombre, n: cuenta[o.id] || 0 });
     });
+    // Por idioma, solo cuando ya contestó alguien en inglés.
+    var idi = R.porIdioma || {};
+    if (idi.en || filtro.indexOf('idioma:') === 0) {
+      opciones.push({ id: 'idioma:en', nombre: 'Contestaron en inglés', n: idi.en || 0 });
+      opciones.push({ id: 'idioma:es', nombre: 'Contestaron en español', n: idi.es || 0 });
+    }
     var sel = $('filtro');
     sel.innerHTML = '';
     opciones.forEach(function (o) {
